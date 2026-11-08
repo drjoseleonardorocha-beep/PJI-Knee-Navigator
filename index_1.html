@@ -1,0 +1,787 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="PJI Knee Navigator: diagnóstico e conduta na infecção periprotética do joelho (ICM 2018, EBJIS 2021, ICM 2025). PT · EN · ES">
+<style>:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font:14px system-ui,sans-serif}img{max-width:100%}</style>
+<title>PJI Knee Navigator</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Sora:wght@500;600;700&family=Source+Sans+3:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap">
+<style>
+/* Layout: a five-step clinical pathway (suspeita → exames → punção → decisão → cirurgia). Each step = inputs + guide on the left, live verdict pinned on the right. */
+:root{
+  --bg:#F3F7F6; --surface:#FFFFFF; --surface-2:#E7F0EE; --line:#D3E0DD;
+  --fg:#1E2B2E; --muted:#5B6B6F; --accent:#1C7D72; --accent-ink:#FFFFFF; --deep:#1F3236; --deep-fg:#E8F2F0; --deep-muted:#9CC8C0;
+  --red:#B8463F; --red-bg:#F9E7E5; --amber:#A86C0E; --amber-bg:#FBF0DB; --green:#1C7D72; --green-bg:#E1F1EE;
+  --f-display:"Sora","Segoe UI",Arial,sans-serif;
+  --f-body:"Source Sans 3","Segoe UI",Arial,sans-serif;
+  --f-mono:"JetBrains Mono",Consolas,"Courier New",monospace;
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+  --bg:#121C1E; --surface:#1A2729; --surface-2:#223336; --line:#2E4245;
+  --fg:#E4EEEC; --muted:#9DB1B0; --accent:#3FB3A4; --accent-ink:#0E1A1B; --deep:#0E1719; --deep-fg:#E4EEEC; --deep-muted:#7FB8AE;
+  --red:#E57F77; --red-bg:#3A2422; --amber:#E7B456; --amber-bg:#3A2F1A; --green:#4FC2B2; --green-bg:#1B3532;
+  color-scheme:dark }}
+:root[data-theme="dark"]{
+  --bg:#121C1E; --surface:#1A2729; --surface-2:#223336; --line:#2E4245;
+  --fg:#E4EEEC; --muted:#9DB1B0; --accent:#3FB3A4; --accent-ink:#0E1A1B; --deep:#0E1719; --deep-fg:#E4EEEC; --deep-muted:#7FB8AE;
+  --red:#E57F77; --red-bg:#3A2422; --amber:#E7B456; --amber-bg:#3A2F1A; --green:#4FC2B2; --green-bg:#1B3532;
+  color-scheme:dark }
+*{box-sizing:border-box}
+[hidden]{display:none !important}
+body{background:var(--bg);color:var(--fg);font-family:var(--f-body);font-size:16px;line-height:1.45;
+  padding-left:max(16px, env(safe-area-inset-left, 0px));padding-right:max(16px, env(safe-area-inset-right, 0px));padding-block:20px 0}
+.wrap{max-width:1200px;margin:0 auto}
+header.top{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:12px 24px;padding-block:6px 16px}
+h1{font-family:var(--f-display);font-weight:700;font-size:clamp(1.5rem,3vw,2.1rem);margin:0;letter-spacing:-.01em;text-wrap:balance}
+h1 small{display:block;font-family:var(--f-body);font-weight:500;font-size:.95rem;color:var(--muted);letter-spacing:0;margin-top:4px}
+.top-actions{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.lang{display:flex;border:1px solid var(--line);border-radius:8px;overflow:hidden;background:var(--surface)}
+.lang button{border:0;background:transparent;color:var(--muted);padding:8px 11px;font-family:var(--f-mono);font-weight:600;font-size:.82rem}
+.lang button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink)}
+button{font:inherit;cursor:pointer}
+.btn{border:1px solid var(--line);background:var(--surface);color:var(--fg);padding:8px 14px;border-radius:8px;font-weight:600;font-size:.92rem}
+.btn:hover{border-color:var(--accent)}
+.btn.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top, 0px);z-index:10;background:var(--bg)}
+nav.steps{position:sticky;top:env(safe-area-inset-top, 0px);z-index:6;background:var(--bg);padding-block:8px;margin-bottom:18px;border-bottom:1px solid var(--line)}
+nav.steps ol{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px}
+@media (max-width:760px){nav.steps ol{display:flex;overflow-x:auto;scrollbar-width:thin;padding-bottom:4px} nav.steps li{flex:0 0 168px}}
+nav.steps button{width:100%;text-align:left;border:1px solid var(--line);background:var(--surface);color:var(--fg);border-radius:10px;padding:8px 12px;display:flex;flex-direction:column;gap:3px;min-height:64px}
+nav.steps button[aria-current="step"]{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent)}
+nav.steps .n{font-family:var(--f-mono);font-size:.72rem;color:var(--muted);font-weight:600}
+nav.steps .t{font-family:var(--f-display);font-weight:600;font-size:.92rem}
+nav.steps .s{font-size:.76rem;font-weight:700;display:flex;align-items:center;gap:6px;color:var(--muted)}
+nav.steps .s::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--line);flex:0 0 auto}
+nav.steps .s.red{color:var(--red)} nav.steps .s.red::before{background:var(--red)}
+nav.steps .s.amber{color:var(--amber)} nav.steps .s.amber::before{background:var(--amber)}
+nav.steps .s.green{color:var(--green)} nav.steps .s.green::before{background:var(--green)}
+
+.step{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(0,1fr);gap:24px;align-items:start}
+@media (max-width:900px){.step{grid-template-columns:1fr}}
+.col{display:flex;flex-direction:column;gap:16px;min-width:0}
+.intro{margin:0;color:var(--muted);font-size:.95rem;max-width:75ch}
+fieldset{border:1px solid var(--line);background:var(--surface);border-radius:12px;padding:16px 18px 18px;margin:0;min-width:0}
+legend{font-family:var(--f-display);font-weight:600;font-size:1.02rem;padding:0 6px;margin-left:-6px}
+.hint{color:var(--muted);font-size:.88rem;margin:2px 0 12px}
+.rows{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px 18px}
+.field{display:flex;flex-direction:column;gap:6px;min-width:0}
+.field > label, .field > .lbl{font-weight:600;font-size:.93rem}
+.sub{color:var(--muted);font-weight:400;font-size:.82rem}
+.inrow{display:flex;gap:6px;align-items:stretch}
+input[type=number], select{font:inherit;font-family:var(--f-mono);font-size:.95rem;background:var(--bg);color:var(--fg);border:1px solid var(--line);border-radius:8px;padding:8px 10px;width:100%;min-width:0}
+select{font-family:var(--f-body)}
+input[type=number]:focus, select:focus{border-color:var(--accent);outline:none;box-shadow:0 0 0 3px color-mix(in srgb, var(--accent) 25%, transparent)}
+.unit{font-family:var(--f-mono);font-size:.8rem;color:var(--muted);align-self:center;white-space:nowrap}
+.inrow select{width:auto;flex:0 0 auto}
+.seg{display:flex;flex-wrap:wrap;gap:6px}
+.seg input{position:absolute;opacity:0;pointer-events:none}
+.seg label{border:1px solid var(--line);background:var(--bg);padding:7px 12px;border-radius:999px;font-size:.9rem;font-weight:600;cursor:pointer;user-select:none}
+.seg input:checked + label{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.seg input:focus-visible + label{outline:3px solid var(--accent);outline-offset:2px}
+.checks{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:8px 18px}
+.chk{display:flex;gap:10px;align-items:flex-start;font-size:.93rem;cursor:pointer}
+.chk input{width:18px;height:18px;margin-top:2px;accent-color:var(--accent);flex:0 0 auto}
+.group-lbl{font-size:.78rem;text-transform:uppercase;letter-spacing:.07em;font-weight:700;margin:16px 0 8px;display:flex;align-items:center;gap:8px}
+.group-lbl.first{margin-top:0}
+.group-lbl::before{content:"";width:10px;height:10px;border-radius:3px;background:currentColor}
+.g-red{color:var(--red)} .g-amber{color:var(--amber)} .g-gray{color:var(--muted)}
+
+details.guide{border:1px solid var(--line);background:var(--surface);border-radius:12px;padding:0;min-width:0}
+details.guide > summary{cursor:pointer;list-style:none;padding:14px 18px;font-family:var(--f-display);font-weight:600;display:flex;justify-content:space-between;gap:12px;align-items:center}
+details.guide > summary::-webkit-details-marker{display:none}
+details.guide > summary::after{content:"+";font-family:var(--f-mono);color:var(--accent);font-size:1.2rem}
+details.guide[open] > summary::after{content:"–"}
+.guide-body{padding:0 18px 16px;display:flex;flex-direction:column;gap:12px;font-size:.93rem}
+.guide-body h3{font-family:var(--f-display);font-size:.88rem;margin:4px 0 0;font-weight:600}
+.guide-body ul{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:4px}
+.tube{display:grid;grid-template-columns:auto minmax(0,1fr);gap:4px 12px;align-items:start}
+.cap{min-width:34px;height:28px;padding:0 4px;border-radius:7px;display:grid;place-items:center;font-family:var(--f-mono);font-size:.68rem;font-weight:700;color:#fff;margin-top:2px}
+.cap.bc{background:#2F6FB0} .cap.edta{background:#7B4AA8} .cap.dry{background:#6E767B} .cap.form{background:#9A6A16} .cap.son{background:#1C7D72}
+.tube b{display:block}
+ul.req{padding:0}
+.req li{list-style:none}
+.tag{font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;padding:2px 7px;border-radius:999px;margin-right:6px;white-space:nowrap}
+.tag.must{background:var(--red-bg);color:var(--red)} .tag.opt{background:var(--amber-bg);color:var(--amber)} .tag.no{background:var(--surface-2);color:var(--muted)} .tag.done{background:var(--green-bg);color:var(--green)}
+
+aside{position:sticky;top:calc(env(safe-area-inset-top, 0px) + 104px);display:flex;flex-direction:column;gap:14px;min-width:0}
+@media (max-width:900px){aside{position:static}}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:16px 18px;min-width:0}
+.card h2{font-family:var(--f-display);font-size:.78rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin:0 0 10px;font-weight:600}
+.verdict{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.pill{font-family:var(--f-display);font-weight:700;font-size:1.05rem;padding:6px 14px;border-radius:999px}
+.pill.red{background:var(--red-bg);color:var(--red)} .pill.amber{background:var(--amber-bg);color:var(--amber)}
+.pill.green{background:var(--green-bg);color:var(--green)} .pill.gray{background:var(--surface-2);color:var(--muted)}
+.card p{margin:10px 0 0;font-size:.94rem}
+.card ul{margin:10px 0 0;padding-left:18px;font-size:.9rem;display:flex;flex-direction:column;gap:3px}
+.card ul.plain{list-style:none;padding:0;gap:6px}
+.score{font-family:var(--f-mono);font-weight:600;font-size:.92rem;color:var(--muted)}
+.meter{position:relative;height:10px;border-radius:999px;background:linear-gradient(90deg,var(--green) 0 25%,var(--amber) 25% 75%,var(--red) 75% 100%);margin:14px 0 4px;opacity:.85}
+.meter .tick{position:absolute;top:-5px;width:4px;height:20px;border-radius:2px;background:var(--fg);transform:translateX(-2px);transition:left .25s ease}
+.meter-lbl{display:flex;justify-content:space-between;font-family:var(--f-mono);font-size:.72rem;color:var(--muted)}
+.breakdown{list-style:none;margin:12px 0 0;padding:0 !important;display:flex;flex-direction:column;gap:5px;font-size:.88rem}
+.breakdown li{display:flex;justify-content:space-between;gap:10px;align-items:baseline}
+.breakdown li span:last-child{font-family:var(--f-mono);font-weight:600;white-space:nowrap}
+.breakdown li.off,.breakdown li.na{color:var(--muted)} .breakdown li.na{opacity:.6}
+.breakdown li.on span:last-child{color:var(--accent)}
+.next{background:var(--deep);color:var(--deep-fg);border:none}
+.next h2{color:var(--deep-muted)}
+.next .big{font-family:var(--f-display);font-weight:700;font-size:1.12rem;margin:0}
+.warn{background:var(--amber-bg);border-color:transparent}
+.warn h2{color:var(--amber)}
+.stepnav{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.disclaimer{font-size:.82rem;color:var(--muted);margin:0 0 8px}
+.refs{font-size:.82rem;color:var(--muted);margin:0;padding-left:18px;display:flex;flex-direction:column;gap:2px}
+.refs a{color:var(--accent)}
+footer{margin:32px 0 0;padding-block:16px 28px;border-top:1px solid var(--line)}
+@media (prefers-reduced-motion: reduce){.meter .tick{transition:none}}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header class="top">
+    <h1>PJI Knee Navigator
+      <small>Diagnóstico e conduta na infecção periprotética do joelho, da suspeita clínica à cirurgia</small></h1>
+    <div class="top-actions">
+      <div class="lang" id="langSeg" role="group" aria-label="Idioma">
+        <button type="button" data-lang="pt" aria-pressed="true">PT</button><button type="button" data-lang="en" aria-pressed="false">EN</button><button type="button" data-lang="es" aria-pressed="false">ES</button>
+      </div>
+      <button type="button" class="btn" id="btnExample">Carregar exemplo</button>
+      <button type="button" class="btn" id="btnClear">Limpar</button>
+    </div>
+  </header>
+
+  <nav class="steps" aria-label="Etapas">
+    <ol>
+      <li><button type="button" data-go="suspeita"><span class="n">ETAPA 1</span><span class="t">Suspeita clínica</span><span class="s" id="st1" data-dyn>—</span></button></li>
+      <li><button type="button" data-go="exames"><span class="n">ETAPA 2</span><span class="t">Exames</span><span class="s" id="st2" data-dyn>—</span></button></li>
+      <li><button type="button" data-go="puncao"><span class="n">ETAPA 3</span><span class="t">Punção</span><span class="s" id="st3" data-dyn>—</span></button></li>
+      <li><button type="button" data-go="decisao"><span class="n">ETAPA 4</span><span class="t">Resultado e conduta</span><span class="s" id="st4" data-dyn>—</span></button></li>
+      <li><button type="button" data-go="cirurgia"><span class="n">ETAPA 5</span><span class="t">Intraoperatório</span><span class="s" id="st5" data-dyn>—</span></button></li>
+    </ol>
+  </nav>
+
+  <form id="f" autocomplete="off">
+  <!-- ETAPA 1 -->
+  <section class="step" id="v-suspeita">
+    <div class="col">
+      <p class="intro">Paciente com ATJ voltou com queixa. Marque o que estiver presente. Sinais vermelhos mudam a conduta na hora; os amarelos indicam investigação.</p>
+      <fieldset>
+        <legend>Linha do tempo</legend>
+        <div class="rows">
+          <div class="field"><label for="tpo">Tempo desde a artroplastia</label>
+            <select id="tpo"><option value="">Selecione</option><option value="lt4">Menos de 4 semanas</option><option value="4to6">4 a 6 semanas</option><option value="6to52">6 semanas a 1 ano</option><option value="gt52">Mais de 1 ano</option></select></div>
+          <div class="field"><label for="dur">Duração dos sintomas</label>
+            <select id="dur"><option value="">Selecione</option><option value="lt3">Menos de 3 semanas</option><option value="ge3">3 semanas ou mais</option></select></div>
+        </div>
+        <label class="chk" style="margin-top:12px"><input type="checkbox" id="hemat"> A prótese funcionava bem e os sintomas começaram de forma súbita (padrão hematogênico)</label>
+      </fieldset>
+      <fieldset>
+        <legend>Sinais e sintomas</legend>
+        <p class="group-lbl g-red first">Alerta máximo</p>
+        <div class="checks">
+          <label class="chk"><input type="checkbox" id="rf_sinus"> Fístula comunicando com a articulação</label>
+          <label class="chk"><input type="checkbox" id="rf_exp"> Deiscência com prótese exposta</label>
+          <label class="chk"><input type="checkbox" id="rf_pus"> Drenagem purulenta pela ferida</label>
+          <label class="chk"><input type="checkbox" id="rf_sep"> Sinais de sepse (febre alta, taquicardia, hipotensão)</label>
+        </div>
+        <p class="group-lbl g-amber">Sintomas suspeitos</p>
+        <div class="checks">
+          <label class="chk"><input type="checkbox" id="s_local"> Calor, rubor, edema ou derrame articular</label>
+          <label class="chk"><input type="checkbox" id="s_fever"> Febre ou calafrios</label>
+          <label class="chk"><input type="checkbox" id="s_wound"> Drenagem prolongada ou problema de cicatrização</label>
+          <label class="chk"><input type="checkbox" id="s_bact"> Bacteremia ou infecção recente à distância (pele, urinária, dentária)</label>
+          <label class="chk"><input type="checkbox" id="s_rest"> Dor em repouso ou noturna</label>
+          <label class="chk"><input type="checkbox" id="s_never"> Dor contínua desde a cirurgia (nunca ficou bem)</label>
+          <label class="chk"><input type="checkbox" id="s_new"> Dor nova após período sem dor</label>
+          <label class="chk"><input type="checkbox" id="s_stiff"> Rigidez progressiva</label>
+        </div>
+        <p class="group-lbl g-gray">Fatores de risco (aumentam a probabilidade)</p>
+        <div class="checks">
+          <label class="chk"><input type="checkbox" id="r_prev"> IPP prévia neste ou em outro implante</label>
+          <label class="chk"><input type="checkbox" id="r_surg"> Cirurgias prévias no joelho / revisão</label>
+          <label class="chk"><input type="checkbox" id="r_dm"> Diabetes descompensado</label>
+          <label class="chk"><input type="checkbox" id="r_imm"> Imunossupressão, corticoide ou biológico</label>
+          <label class="chk"><input type="checkbox" id="r_obes"> Obesidade grave</label>
+          <label class="chk"><input type="checkbox" id="r_ra"> Artrite reumatoide</label>
+        </div>
+      </fieldset>
+      <div class="stepnav"><span></span><button type="button" class="btn primary" data-go="exames">Próximo: exames →</button></div>
+    </div>
+    <aside>
+      <section class="card"><h2>Avaliação clínica</h2>
+        <div class="verdict"><span class="pill gray" id="cPill" data-dyn>Marque os achados</span></div>
+        <p id="cScen" data-dyn></p><ul id="cList" data-dyn></ul></section>
+      <section class="card next"><h2>O que fazer agora</h2><p class="big" id="cNextBig" data-dyn>—</p><ul id="cNext" data-dyn></ul></section>
+    </aside>
+  </section>
+
+  <!-- ETAPA 2 -->
+  <section class="step" id="v-exames" hidden>
+    <div class="col">
+      <p class="intro">Toda ATJ dolorosa com suspeita de infecção deve ter PCR, VHS e radiografias antes de qualquer decisão.</p>
+      <details class="guide" open>
+        <summary>Quais exames pedir</summary>
+        <div class="guide-body">
+          <ul class="req">
+            <li><span class="tag must">obrigatório</span><b>PCR e VHS</b> em todo paciente com suspeita e antes de toda revisão (ICM 2025: evidência forte, 91%).</li>
+            <li><span class="tag must">obrigatório</span><b>Radiografias</b> do joelho (AP, perfil e axial de patela), comparando com as anteriores: soltura, osteólise, fratura, desgaste, mau posicionamento. Não diagnosticam infecção sozinhas, mas mostram causas mecânicas (IDSA).</li>
+            <li><span class="tag must">se febre ou início agudo</span><b>Hemoculturas</b> quando houver febre, início agudo, suspeita de bacteremia ou germe como <i>S. aureus</i> (IDSA).</li>
+            <li><span class="tag opt">complementar</span><b>D-dímero</b> quando houver incerteza (sensível) e <b>fibrinogênio</b> (específico) — ICM 2025.</li>
+            <li><span class="tag opt">casos raros</span><b>Cintilografia com leucócitos marcados</b> ± medula óssea quando sorologia e punção não definem (ICM 2025).</li>
+            <li><span class="tag no">não pedir</span><b>Procalcitonina</b> (sem papel, ICM 2025); <b>TC, RM ou PET</b> de rotina.</li>
+          </ul>
+        </div>
+      </details>
+      <fieldset>
+        <legend>Resultados</legend>
+        <div class="rows">
+          <div class="field"><label for="crp">PCR sérica</label>
+            <div class="inrow"><input type="number" id="crp" min="0" step="0.1" inputmode="decimal" placeholder="—">
+              <select id="crp_u" aria-label="Unidade da PCR"><option value="mgL">mg/L</option><option value="mgdL">mg/dL</option></select></div></div>
+          <div class="field"><label for="esr">VHS</label>
+            <div class="inrow"><input type="number" id="esr" min="0" step="1" inputmode="numeric" placeholder="—"><span class="unit">mm/h</span></div></div>
+          <div class="field"><label for="dd">D-dímero</label>
+            <div class="inrow"><input type="number" id="dd" min="0" step="1" inputmode="numeric" placeholder="—"><span class="unit">ng/mL</span></div></div>
+          <div class="field"><label for="fib">Fibrinogênio</label>
+            <select id="fib"><option value="">Não feito</option><option value="norm">Normal</option><option value="high">Elevado (pelo laboratório)</option></select></div>
+          <div class="field"><label for="rx">Radiografias</label>
+            <select id="rx"><option value="">Não feitas</option><option value="normal">Sem alterações</option><option value="loose">Soltura ou osteólise</option><option value="mech">Outra causa mecânica (fratura, desgaste, instabilidade)</option></select></div>
+          <div class="field"><label for="hc">Hemoculturas</label>
+            <select id="hc"><option value="">Não colhidas</option><option value="neg">Negativas</option><option value="pos">Positivas</option></select></div>
+        </div>
+      </fieldset>
+      <div class="stepnav"><button type="button" class="btn" data-go="suspeita">← Suspeita clínica</button><button type="button" class="btn primary" data-go="puncao">Próximo: punção →</button></div>
+    </div>
+    <aside>
+      <section class="card"><h2>Exames obrigatórios</h2><ul class="plain" id="eCheck" data-dyn></ul></section>
+      <section class="card next"><h2>Punção do joelho</h2><p class="big" id="pIndBig" data-dyn>—</p><ul id="pInd" data-dyn></ul></section>
+    </aside>
+  </section>
+
+  <!-- ETAPA 3 -->
+  <section class="step" id="v-puncao" hidden>
+    <div class="col">
+      <details class="guide" open>
+        <summary>Como fazer a punção</summary>
+        <div class="guide-body">
+          <h3>Antes</h3>
+          <ul>
+            <li>Suspender antibiótico por pelo menos 2 semanas se o paciente estiver estável (IDSA). Em sepse, não adiar: colher hemoculturas e punção e iniciar o tratamento.</li>
+            <li>Não puncionar através de pele com celulite ou ferida.</li>
+          </ul>
+          <h3>Ambiente e material estéreis</h3>
+          <ul>
+            <li>Sala de procedimentos ou centro cirúrgico, com técnica asséptica estrita: máscara, luvas estéreis e campo estéril.</li>
+            <li>Antissepsia ampla com clorexidina alcoólica (ou PVPI), respeitando o tempo de secagem.</li>
+            <li>Agulha 18G e seringa de 20 mL; via superolateral ou parapatelar. Guiar por ultrassom ou radioscopia se o derrame for pequeno.</li>
+            <li>Anestésico local apenas na pele e no subcutâneo: não injetar dentro da articulação (efeito bacteriostático).</li>
+            <li><b>Punção seca:</b> não injetar soro para obter celularidade (dilui e invalida a contagem). Repetir guiada por imagem; lavado só serve para cultura.</li>
+          </ul>
+          <h3>Como enviar o líquido (ordem de prioridade se houver pouco volume)</h3>
+          <div class="tube"><span class="cap bc">HC</span><div><b>1º · Frascos de hemocultura aeróbio e anaeróbio</b>Inocular à beira do leito, 1 a 10 mL em cada (frasco pediátrico se houver menos de 3 mL). Pedir incubação prolongada, até 14 dias, para germes de baixa virulência.</div></div>
+          <div class="tube"><span class="cap edta">EDTA</span><div><b>2º · Tubo com EDTA (tampa roxa)</b>Contagem de leucócitos e diferencial (% PMN). Pelo menos 250 µL, analisar em até 1 hora.</div></div>
+          <div class="tube"><span class="cap dry">SECO</span><div><b>3º · Tubo seco estéril, sem aditivo</b>Gram, pesquisa de cristais, alfa-defensina, PCR sinovial, calprotectina. Fita de esterase leucocitária na hora (centrifugar se estiver hemático).</div></div>
+          <ul>
+            <li><b>Fungos e micobactérias:</b> não de rotina. Pedir em imunossuprimidos, fístula crônica, IPP com cultura negativa e critérios inflamatórios, ou suspeita epidemiológica (tuberculose é endêmica no Brasil).</li>
+            <li><b>Swab</b> de fístula ou ferida: não coletar (baixa sensibilidade e contaminação).</li>
+            <li>Guardar uma alíquota congelada para eventual teste molecular, se o laboratório permitir.</li>
+          </ul>
+        </div>
+      </details>
+      <fieldset>
+        <legend>Resultados da punção</legend>
+        <label class="chk" style="margin-bottom:12px"><input type="checkbox" id="c_atb"> Paciente usou antibiótico nas 2 semanas antes da punção</label>
+        <div class="rows">
+          <div class="field"><label for="wbc">Leucócitos</label>
+            <div class="inrow"><input type="number" id="wbc" min="0" step="1" inputmode="numeric" placeholder="—"><span class="unit">/µL</span></div></div>
+          <div class="field"><label for="pmn">PMN</label>
+            <div class="inrow"><input type="number" id="pmn" min="0" max="100" step="1" inputmode="numeric" placeholder="—"><span class="unit">%</span></div></div>
+          <div class="field"><label for="le">Esterase leucocitária (fita)</label>
+            <select id="le"><option value="">Não feita</option><option value="neg">Negativa</option><option value="tr">Traços</option><option value="1">+</option><option value="2">++</option><option value="3">+++</option></select></div>
+          <div class="field"><label for="ad">Alfa-defensina</label>
+            <select id="ad"><option value="">Não feita</option><option value="neg">Negativa</option><option value="pos">Positiva</option></select></div>
+          <div class="field"><label for="scrp">PCR sinovial</label>
+            <div class="inrow"><input type="number" id="scrp" min="0" step="0.1" inputmode="decimal" placeholder="—"><span class="unit">mg/L</span></div></div>
+          <div class="field"><label for="calp">Calprotectina sinovial</label>
+            <div class="inrow"><input type="number" id="calp" min="0" step="1" inputmode="numeric" placeholder="—"><span class="unit">mg/L</span></div>
+            <span class="sub">Adjuvante, não pontua. Corte usual 50 mg/L (ELISA).</span></div>
+          <div class="field"><label for="pcult">Cultura do líquido</label>
+            <select id="pcult"><option value="">Não feita / aguardando</option><option value="neg">Negativa</option><option value="pos">Positiva</option><option value="pos2">Positiva, mesmo germe em 2ª amostra</option></select></div>
+          <div class="field"><label for="germ">Germe identificado</label>
+            <select id="germ"><option value="">Nenhum / desconhecido</option><option value="vir">Virulento e sensível (S. aureus MSSA, estreptococo, Gram-negativo sensível)</option><option value="low">Baixa virulência / comensal (SCN, C. acnes)</option><option value="dtt">Difícil de tratar (resistente a rifampicina ou quinolona, fungo, multirresistente)</option><option value="poly">Polimicrobiano</option></select></div>
+        </div>
+      </fieldset>
+      <div class="stepnav"><button type="button" class="btn" data-go="exames">← Exames</button><button type="button" class="btn primary" data-go="decisao">Próximo: resultado e conduta →</button></div>
+    </div>
+    <aside>
+      <section class="card"><h2>Leitura da punção</h2><ul id="pRead" data-dyn></ul></section>
+      <section class="card warn" id="pWarnCard" hidden><h2>Atenção</h2><ul id="pWarn" data-dyn></ul></section>
+    </aside>
+  </section>
+
+  <!-- ETAPA 4 -->
+  <section class="step" id="v-decisao" hidden>
+    <div class="col">
+      <fieldset>
+        <legend>Antes de interpretar: o que pode confundir</legend>
+        <p class="hint">Estas condições elevam celularidade, PCR ou alfa-defensina sem infecção. Ficam aqui porque mudam a leitura dos resultados, e valem também para o intraoperatório.</p>
+        <div class="checks">
+          <label class="chk"><input type="checkbox" id="c_altr"> Metalose / reação adversa a metal</label>
+          <label class="chk"><input type="checkbox" id="c_crys"> Gota ou artropatia por cristais</label>
+          <label class="chk"><input type="checkbox" id="c_infl"> Artrite inflamatória em atividade</label>
+          <label class="chk"><input type="checkbox" id="c_hema"> Hematoma / aspirado hemático</label>
+          <label class="chk"><input type="checkbox" id="c_frac"> Fratura periprotética</label>
+        </div>
+      </fieldset>
+      <fieldset>
+        <legend>Dados para a escolha da cirurgia</legend>
+        <div class="rows">
+          <div class="field"><label for="impl">Fixação do implante</label>
+            <select id="impl"><option value="">Indeterminada</option><option value="fix">Bem fixo</option><option value="loose">Solto</option></select></div>
+          <div class="field"><label for="soft">Partes moles</label>
+            <select id="soft"><option value="">Não avaliadas</option><option value="ok">Adequadas</option><option value="bad">Comprometidas (necessidade de retalho, necrose)</option></select></div>
+        </div>
+        <div class="checks" style="margin-top:12px">
+          <label class="chk"><input type="checkbox" id="dairFail"> DAIR prévio falhou</label>
+          <label class="chk"><input type="checkbox" id="unfit"> Sem condição clínica para cirurgias múltiplas</label>
+        </div>
+      </fieldset>
+      <div class="stepnav"><button type="button" class="btn" data-go="puncao">← Punção</button><button type="button" class="btn primary" data-go="cirurgia">Próximo: intraoperatório →</button></div>
+    </div>
+    <aside>
+      <section class="card"><h2>ICM 2018 · escore pré-operatório</h2>
+        <div class="verdict"><span class="pill gray" id="icmPill" data-dyn>Preencha os dados</span><span class="score" id="icmScore" data-dyn></span></div>
+        <div class="meter" aria-hidden="true"><span class="tick" id="icmTick" style="left:0%"></span></div>
+        <div class="meter-lbl"><span>0</span><span>2</span><span>4</span><span>6</span><span>8+</span></div>
+        <ul class="breakdown" id="icmList" data-dyn></ul></section>
+      <section class="card"><h2>EBJIS 2021 · pré-operatório</h2>
+        <div class="verdict"><span class="pill gray" id="ebPill" data-dyn>Preencha os dados</span></div><ul id="ebList" data-dyn></ul></section>
+      <section class="card next"><h2>Conduta</h2><p class="big" id="dBig" data-dyn>—</p><ul id="dList" data-dyn></ul></section>
+      <section class="card warn" id="dWarnCard" hidden><h2>Atenção na interpretação</h2><ul id="dWarn" data-dyn></ul></section>
+    </aside>
+  </section>
+
+  <!-- ETAPA 5 -->
+  <section class="step" id="v-cirurgia" hidden>
+    <div class="col">
+      <details class="guide" open>
+        <summary>Protocolo de coleta no centro cirúrgico</summary>
+        <div class="guide-body">
+          <h3>Antibiótico</h3>
+          <ul><li>Com germe já conhecido, a profilaxia habitual pode ser feita. Com germe desconhecido, combine com a infectologia se o antibiótico será dado só depois da coleta das amostras.</li></ul>
+          <h3>O que colher</h3>
+          <div class="tube"><span class="cap bc">HC</span><div><b>Líquido articular, antes da artrotomia e da irrigação</b>Aspirar com seringa e inocular em frascos de hemocultura aeróbio e anaeróbio; tubo seco para Gram e cristais; EDTA para celularidade se ainda não houver.</div></div>
+          <div class="tube"><span class="cap dry">4–6</span><div><b>4 a 6 amostras no total, pelo menos 3 de tecido periprotético</b> (ICM 2025). Membrana de interface, sinóvia inflamada, tecido junto ao osso. Instrumental limpo para cada amostra (nova lâmina e pinça), cada uma em frasco estéril seco e identificado, sem formol. Não é preciso colocar soro; se o transporte demorar, umedecer com poucas gotas de soro estéril. Enviar logo ao laboratório (idealmente em até 2 horas).</div></div>
+          <div class="tube"><span class="cap form">HP</span><div><b>Histologia</b>Amostras separadas em formol para anatomopatológico (≥ 5 neutrófilos em ≥ 5 campos de 400×). Congelação intraoperatória quando o resultado mudar a conduta, por exemplo entre revisão em 1 ou 2 tempos.</div></div>
+          <div class="tube"><span class="cap son">SON</span><div><b>Sonicação dos componentes retirados</b>Sempre que houver retirada de implante e o serviço tiver sonicação: componentes em recipiente rígido estéril, sem formol. No DAIR, o polietileno trocado também pode ser sonicado. Positivo se &gt; 50 UFC/mL (&gt; 200 se centrifugado). ICM 2025: pode melhorar a detecção (evidência moderada, 94%).</div></div>
+          <ul>
+            <li><b>Sem sonicador:</b> colha normalmente. As 4 a 6 amostras de tecido e o líquido em frasco de hemocultura continuam sendo a base do diagnóstico. Não faça swab do implante.</li>
+            <li><b>No laboratório:</b> pedir homogeneização mecânica dos tecidos (ICM 2025), inoculação em frascos de hemocultura (melhora o rendimento) e incubação por até 14 dias.</li>
+            <li><b>Fungos e micobactérias:</b> mesmos critérios da punção (imunossupressão, fístula crônica, cultura negativa com inflamação, suspeita de tuberculose).</li>
+            <li><b>Molecular (NGS/PCR):</b> adjuvante para IPP com cultura negativa; guardar tecido ou líquido congelado.</li>
+          </ul>
+        </div>
+      </details>
+      <fieldset>
+        <legend>Achados intraoperatórios</legend>
+        <div class="rows">
+          <div class="field"><span class="lbl">Purulência</span>
+            <div class="seg" role="radiogroup" aria-label="Purulência">
+              <input type="radio" name="pus" id="pus_nd" value="" checked><label for="pus_nd">Não avaliada</label>
+              <input type="radio" name="pus" id="pus_n" value="no"><label for="pus_n">Não</label>
+              <input type="radio" name="pus" id="pus_y" value="yes"><label for="pus_y">Sim</label>
+            </div></div>
+          <div class="field"><label for="ntis">Amostras de tecido enviadas</label>
+            <div class="inrow"><input type="number" id="ntis" min="0" step="1" inputmode="numeric" placeholder="—"><span class="unit">amostras</span></div></div>
+          <div class="field"><label for="hist">Histologia (400×)</label>
+            <select id="hist"><option value="">Não feita / aguardando</option><option value="neg">Negativa</option><option value="one">≥ 5 neutrófilos em 1 campo</option><option value="pos">≥ 5 neutrófilos em ≥ 5 campos</option><option value="org">Microrganismos visíveis</option></select></div>
+          <div class="field"><label for="cult">Culturas de tecido</label>
+            <select id="cult"><option value="">Aguardando</option><option value="neg">Todas negativas</option><option value="one">1 positiva</option><option value="two">≥ 2 com o mesmo germe</option><option value="diff">Germes diferentes em amostras diferentes</option></select></div>
+          <div class="field"><label for="son">Sonicação</label>
+            <div class="inrow"><input type="number" id="son" min="0" step="1" inputmode="numeric" placeholder="—"><span class="unit">UFC/mL</span></div>
+            <label class="chk" style="font-size:.85rem"><input type="checkbox" id="son_c"> Sonicado centrifugado</label></div>
+          <div class="field"><label for="ngs">Sequenciamento (NGS)</label>
+            <select id="ngs"><option value="">Não feito</option><option value="neg">Negativo</option><option value="pos">Positivo</option></select></div>
+        </div>
+        <p class="hint" style="margin:12px 0 0">O tipo de germe vem do campo "Germe identificado" da etapa 3; atualize-o com o resultado das culturas.</p>
+      </fieldset>
+      <div class="stepnav"><button type="button" class="btn" data-go="decisao">← Resultado e conduta</button><span></span></div>
+    </div>
+    <aside>
+      <section class="card"><h2>Classificação final</h2>
+        <div class="verdict"><span class="pill gray" id="fIcm" data-dyn>ICM —</span><span class="score" id="fIcmScore" data-dyn></span></div>
+        <div class="verdict" style="margin-top:8px"><span class="pill gray" id="fEb" data-dyn>EBJIS —</span></div>
+        <ul id="fList" data-dyn></ul></section>
+      <section class="card next"><h2>Como interpretar as culturas</h2><p class="big" id="iBig" data-dyn>—</p><ul id="iList" data-dyn></ul></section>
+      <section class="card warn" id="fWarnCard" hidden><h2>Atenção</h2><ul id="fWarn" data-dyn></ul></section>
+    </aside>
+  </section>
+  </form>
+
+  <footer>
+    <p class="disclaimer"><b>Ferramenta de apoio à decisão.</b> Não substitui o julgamento clínico nem a discussão com a infectologia. Nenhuma definição é padrão-ouro. O ICM 2025 não publicou um novo escore; a classificação usa o ICM 2018 e a EBJIS 2021, e as recomendações de 2025 entram exame a exame.</p>
+    <ol class="refs">
+      <li>Parvizi J et al. The 2018 definition of periprosthetic hip and knee infection. J Arthroplasty 2018;33:1309-14. <a href="https://doi.org/10.1016/j.arth.2018.02.078" target="_blank" rel="noopener">doi</a></li>
+      <li>McNally M et al. The EBJIS definition of periprosthetic joint infection. Bone Joint J 2021;103-B:18-25. <a href="https://doi.org/10.1302/0301-620X.103B1.BJJ-2020-1381.R1" target="_blank" rel="noopener">doi</a></li>
+      <li>Osmon DR et al. Diagnosis and management of prosthetic joint infection: IDSA guidelines. Clin Infect Dis 2013;56:e1-25. <a href="https://doi.org/10.1093/cid/cis803" target="_blank" rel="noopener">doi</a></li>
+      <li>Pupaibool J et al. 2025 ICM: Serological diagnosis of SSI/PJI. J Arthroplasty 2025;41(1 Suppl 1):S248-60. <a href="https://doi.org/10.1016/j.arth.2025.10.102" target="_blank" rel="noopener">doi</a></li>
+      <li>2025 ICM: Sample collection and agent identification. J Arthroplasty 2025;41(1 Suppl 1):S157-63. <a href="https://doi.org/10.1016/j.arth.2025.08.040" target="_blank" rel="noopener">doi</a></li>
+      <li>Noor S, Limas RA et al. 2025 ICM: Diagnostic imaging for PJI. J Arthroplasty 2025;41(1 Suppl 1):S289-96. <a href="https://doi.org/10.1016/j.arth.2025.10.083" target="_blank" rel="noopener">doi</a></li>
+      <li>Ferrini A et al. Differences between ICM 2018 and ICM 2025 (12 semanas de antibiótico após DAIR; repetição de DAIR). J Arthroplasty 2026;41(2):304-7. <a href="https://doi.org/10.1016/j.arth.2025.10.113" target="_blank" rel="noopener">doi</a></li>
+      <li>Peel TN et al. Culturing periprosthetic tissue specimens in blood culture bottles. mBio 2016. <a href="https://pubmed.ncbi.nlm.nih.gov/26733067/" target="_blank" rel="noopener">pubmed</a></li>
+      <li>Schäfer P et al. Prolonged bacterial culture to identify late periprosthetic joint infection. Clin Infect Dis 2008;47:1403-9. <a href="https://doi.org/10.1086/592973" target="_blank" rel="noopener">doi</a></li>
+      <li>Festa E et al. Synovial calprotectin in PJI: meta-analysis. Arch Orthop Trauma Surg 2024;144:5217-27. <a href="https://doi.org/10.1007/s00402-024-05416-0" target="_blank" rel="noopener">doi</a></li>
+    </ol>
+  </footer>
+</div>
+
+<script>window.__I18N = {"Diagnóstico e conduta na infecção periprotética do joelho, da suspeita clínica à cirurgia": ["Diagnosis and management of knee periprosthetic joint infection, from clinical suspicion to surgery", "Diagnóstico y conducta en la infección periprotésica de rodilla, de la sospecha clínica a la cirugía"], "Idioma": ["Language", "Idioma"], "Carregar exemplo": ["Load example", "Cargar ejemplo"], "Limpar": ["Clear", "Limpiar"], "Etapas": ["Steps", "Etapas"], "ETAPA 1": ["STEP 1", "ETAPA 1"], "ETAPA 2": ["STEP 2", "ETAPA 2"], "ETAPA 3": ["STEP 3", "ETAPA 3"], "ETAPA 4": ["STEP 4", "ETAPA 4"], "ETAPA 5": ["STEP 5", "ETAPA 5"], "Suspeita clínica": ["Clinical suspicion", "Sospecha clínica"], "Exames": ["Workup", "Exámenes"], "Punção": ["Aspiration", "Punción"], "Resultado e conduta": ["Results and management", "Resultado y conducta"], "Intraoperatório": ["Intraoperative", "Intraoperatorio"], "Paciente com ATJ voltou com queixa. Marque o que estiver presente. Sinais vermelhos mudam a conduta na hora; os amarelos indicam investigação.": ["A patient with a TKA returns with a complaint. Check what is present. Red signs change management immediately; amber signs call for a workup.", "Paciente con ATR que regresa con una queja. Marque lo que esté presente. Los signos rojos cambian la conducta de inmediato; los amarillos indican estudio."], "Linha do tempo": ["Timeline", "Línea de tiempo"], "Tempo desde a artroplastia": ["Time since arthroplasty", "Tiempo desde la artroplastia"], "Selecione": ["Select", "Seleccione"], "Menos de 4 semanas": ["Less than 4 weeks", "Menos de 4 semanas"], "4 a 6 semanas": ["4 to 6 weeks", "4 a 6 semanas"], "6 semanas a 1 ano": ["6 weeks to 1 year", "6 semanas a 1 año"], "Mais de 1 ano": ["More than 1 year", "Más de 1 año"], "Duração dos sintomas": ["Duration of symptoms", "Duración de los síntomas"], "Menos de 3 semanas": ["Less than 3 weeks", "Menos de 3 semanas"], "3 semanas ou mais": ["3 weeks or more", "3 semanas o más"], "A prótese funcionava bem e os sintomas começaram de forma súbita (padrão hematogênico)": ["The prosthesis was working well and symptoms started suddenly (hematogenous pattern)", "La prótesis funcionaba bien y los síntomas comenzaron de forma súbita (patrón hematógeno)"], "Sinais e sintomas": ["Signs and symptoms", "Signos y síntomas"], "Alerta máximo": ["Red flags", "Alerta máxima"], "Fístula comunicando com a articulação": ["Sinus tract communicating with the joint", "Fístula que comunica con la articulación"], "Deiscência com prótese exposta": ["Wound dehiscence with exposed prosthesis", "Dehiscencia con prótesis expuesta"], "Drenagem purulenta pela ferida": ["Purulent wound drainage", "Drenaje purulento por la herida"], "Sinais de sepse (febre alta, taquicardia, hipotensão)": ["Signs of sepsis (high fever, tachycardia, hypotension)", "Signos de sepsis (fiebre alta, taquicardia, hipotensión)"], "Sintomas suspeitos": ["Suspicious symptoms", "Síntomas sospechosos"], "Calor, rubor, edema ou derrame articular": ["Warmth, redness, swelling or joint effusion", "Calor, rubor, edema o derrame articular"], "Febre ou calafrios": ["Fever or chills", "Fiebre o escalofríos"], "Drenagem prolongada ou problema de cicatrização": ["Prolonged drainage or wound-healing problem", "Drenaje prolongado o problema de cicatrización"], "Bacteremia ou infecção recente à distância (pele, urinária, dentária)": ["Bacteremia or recent remote infection (skin, urinary, dental)", "Bacteriemia o infección reciente a distancia (piel, urinaria, dental)"], "Dor em repouso ou noturna": ["Pain at rest or at night", "Dolor en reposo o nocturno"], "Dor contínua desde a cirurgia (nunca ficou bem)": ["Continuous pain since surgery (never pain-free)", "Dolor continuo desde la cirugía (nunca estuvo bien)"], "Dor nova após período sem dor": ["New pain after a pain-free period", "Dolor nuevo tras un período sin dolor"], "Rigidez progressiva": ["Progressive stiffness", "Rigidez progresiva"], "Fatores de risco (aumentam a probabilidade)": ["Risk factors (raise the probability)", "Factores de riesgo (aumentan la probabilidad)"], "IPP prévia neste ou em outro implante": ["Previous PJI in this or another implant", "IPP previa en este u otro implante"], "Cirurgias prévias no joelho / revisão": ["Previous knee surgery / revision", "Cirugías previas en la rodilla / revisión"], "Diabetes descompensado": ["Uncontrolled diabetes", "Diabetes descompensada"], "Imunossupressão, corticoide ou biológico": ["Immunosuppression, corticosteroids or biologics", "Inmunosupresión, corticoides o biológicos"], "Obesidade grave": ["Severe obesity", "Obesidad grave"], "Artrite reumatoide": ["Rheumatoid arthritis", "Artritis reumatoide"], "Próximo: exames →": ["Next: workup →", "Siguiente: exámenes →"], "Avaliação clínica": ["Clinical assessment", "Evaluación clínica"], "O que fazer agora": ["What to do now", "Qué hacer ahora"], "Toda ATJ dolorosa com suspeita de infecção deve ter PCR, VHS e radiografias antes de qualquer decisão.": ["Every painful TKA with suspected infection should have CRP, ESR and radiographs before any decision.", "Toda ATR dolorosa con sospecha de infección debe tener PCR, VSG y radiografías antes de cualquier decisión."], "Quais exames pedir": ["Which tests to order", "Qué exámenes pedir"], "obrigatório": ["mandatory", "obligatorio"], "PCR e VHS": ["CRP and ESR", "PCR y VSG"], "em todo paciente com suspeita e antes de toda revisão (ICM 2025: evidência forte, 91%).": ["in every patient with suspected infection and before every revision (ICM 2025: strong evidence, 91%).", "en todo paciente con sospecha y antes de toda revisión (ICM 2025: evidencia fuerte, 91%)."], "Radiografias": ["Radiographs", "Radiografías"], "do joelho (AP, perfil e axial de patela), comparando com as anteriores: soltura, osteólise, fratura, desgaste, mau posicionamento. Não diagnosticam infecção sozinhas, mas mostram causas mecânicas (IDSA).": ["of the knee (AP, lateral and patellar axial), compared with previous films: loosening, osteolysis, fracture, wear, malposition. They do not diagnose infection on their own, but show mechanical causes (IDSA).", "de rodilla (AP, lateral y axial de rótula), comparando con las previas: aflojamiento, osteólisis, fractura, desgaste, malposición. No diagnostican infección por sí solas, pero muestran causas mecánicas (IDSA)."], "se febre ou início agudo": ["if fever or acute onset", "si fiebre o inicio agudo"], "Hemoculturas": ["Blood cultures", "Hemocultivos"], "quando houver febre, início agudo, suspeita de bacteremia ou germe como": ["when there is fever, acute onset, suspected bacteremia or an organism such as", "cuando haya fiebre, inicio agudo, sospecha de bacteriemia o germen como"], "complementar": ["adjunct", "complementario"], "D-dímero": ["D-dimer", "Dímero D"], "quando houver incerteza (sensível) e": ["when there is uncertainty (sensitive) and", "cuando hay incertidumbre (sensible) y"], "fibrinogênio": ["fibrinogen", "fibrinógeno"], "(específico) — ICM 2025.": ["(specific) — ICM 2025.", "(específico) — ICM 2025."], "casos raros": ["rare cases", "casos raros"], "Cintilografia com leucócitos marcados": ["Labeled leukocyte scintigraphy", "Gammagrafía con leucocitos marcados"], "± medula óssea quando sorologia e punção não definem (ICM 2025).": ["± bone marrow when serology and aspiration are inconclusive (ICM 2025).", "± médula ósea cuando la serología y la punción no definen (ICM 2025)."], "não pedir": ["do not order", "no pedir"], "Procalcitonina": ["Procalcitonin", "Procalcitonina"], "(sem papel, ICM 2025);": ["(no role, ICM 2025);", "(sin papel, ICM 2025);"], "TC, RM ou PET": ["CT, MRI or PET", "TC, RM o PET"], "de rotina.": ["routinely.", "de rutina."], "Resultados": ["Results", "Resultados"], "PCR sérica": ["Serum CRP", "PCR sérica"], "Unidade da PCR": ["CRP unit", "Unidad de la PCR"], "VHS": ["ESR", "VSG"], "Fibrinogênio": ["Fibrinogen", "Fibrinógeno"], "Não feito": ["Not done", "No realizado"], "Normal": ["Normal", "Normal"], "Elevado (pelo laboratório)": ["Elevated (per lab)", "Elevado (según laboratorio)"], "Não feitas": ["Not done", "No realizadas"], "Sem alterações": ["No abnormalities", "Sin alteraciones"], "Soltura ou osteólise": ["Loosening or osteolysis", "Aflojamiento u osteólisis"], "Outra causa mecânica (fratura, desgaste, instabilidade)": ["Other mechanical cause (fracture, wear, instability)", "Otra causa mecánica (fractura, desgaste, inestabilidad)"], "Não colhidas": ["Not collected", "No extraídos"], "Negativas": ["Negative", "Negativos"], "Positivas": ["Positive", "Positivos"], "← Suspeita clínica": ["← Clinical suspicion", "← Sospecha clínica"], "Próximo: punção →": ["Next: aspiration →", "Siguiente: punción →"], "Exames obrigatórios": ["Mandatory tests", "Exámenes obligatorios"], "Punção do joelho": ["Knee aspiration", "Punción de rodilla"], "Como fazer a punção": ["How to perform the aspiration", "Cómo realizar la punción"], "Antes": ["Before", "Antes"], "Suspender antibiótico por pelo menos 2 semanas se o paciente estiver estável (IDSA). Em sepse, não adiar: colher hemoculturas e punção e iniciar o tratamento.": ["Withhold antibiotics for at least 2 weeks if the patient is stable (IDSA). In sepsis, do not delay: draw blood cultures, aspirate and start treatment.", "Suspender el antibiótico al menos 2 semanas si el paciente está estable (IDSA). En sepsis, no retrasar: hemocultivos, punción e iniciar el tratamiento."], "Não puncionar através de pele com celulite ou ferida.": ["Do not aspirate through cellulitis or a wound.", "No puncionar a través de piel con celulitis o herida."], "Ambiente e material estéreis": ["Sterile setting and materials", "Ambiente y material estériles"], "Sala de procedimentos ou centro cirúrgico, com técnica asséptica estrita: máscara, luvas estéreis e campo estéril.": ["Procedure room or operating room, with strict aseptic technique: mask, sterile gloves and sterile drape.", "Sala de procedimientos o quirófano, con técnica aséptica estricta: mascarilla, guantes estériles y campo estéril."], "Antissepsia ampla com clorexidina alcoólica (ou PVPI), respeitando o tempo de secagem.": ["Wide skin prep with alcoholic chlorhexidine (or povidone-iodine), allowing drying time.", "Antisepsia amplia con clorhexidina alcohólica (o povidona yodada), respetando el tiempo de secado."], "Agulha 18G e seringa de 20 mL; via superolateral ou parapatelar. Guiar por ultrassom ou radioscopia se o derrame for pequeno.": ["18G needle and 20 mL syringe; superolateral or parapatellar approach. Use ultrasound or fluoroscopy if the effusion is small.", "Aguja 18G y jeringa de 20 mL; abordaje superolateral o parapatelar. Guiar por ecografía o radioscopia si el derrame es pequeño."], "Anestésico local apenas na pele e no subcutâneo: não injetar dentro da articulação (efeito bacteriostático).": ["Local anesthetic only in the skin and subcutaneous tissue: do not inject into the joint (bacteriostatic effect).", "Anestésico local solo en piel y subcutáneo: no inyectar dentro de la articulación (efecto bacteriostático)."], "Punção seca:": ["Dry tap:", "Punción seca:"], "não injetar soro para obter celularidade (dilui e invalida a contagem). Repetir guiada por imagem; lavado só serve para cultura.": ["do not inject saline to obtain a cell count (it dilutes and invalidates the count). Repeat under imaging guidance; lavage is only useful for culture.", "no inyectar suero para obtener recuento celular (diluye e invalida el recuento). Repetir guiada por imagen; el lavado solo sirve para cultivo."], "Como enviar o líquido (ordem de prioridade se houver pouco volume)": ["How to send the fluid (priority order if volume is low)", "Cómo enviar el líquido (orden de prioridad si hay poco volumen)"], "HC": ["BC", "HC"], "1º · Frascos de hemocultura aeróbio e anaeróbio": ["1st · Aerobic and anaerobic blood culture bottles", "1º · Frascos de hemocultivo aerobio y anaerobio"], "Inocular à beira do leito, 1 a 10 mL em cada (frasco pediátrico se houver menos de 3 mL). Pedir incubação prolongada, até 14 dias, para germes de baixa virulência.": ["Inoculate at the bedside, 1 to 10 mL in each (pediatric bottle if less than 3 mL). Request prolonged incubation, up to 14 days, for low-virulence organisms.", "Inocular a pie de cama, 1 a 10 mL en cada uno (frasco pediátrico si hay menos de 3 mL). Solicitar incubación prolongada, hasta 14 días, para gérmenes de baja virulencia."], "2º · Tubo com EDTA (tampa roxa)": ["2nd · EDTA tube (purple top)", "2º · Tubo con EDTA (tapa morada)"], "Contagem de leucócitos e diferencial (% PMN). Pelo menos 250 µL, analisar em até 1 hora.": ["White cell count and differential (% PMN). At least 250 µL, analyze within 1 hour.", "Recuento de leucocitos y fórmula (% PMN). Al menos 250 µL, analizar en 1 hora."], "SECO": ["PLAIN", "SECO"], "3º · Tubo seco estéril, sem aditivo": ["3rd · Sterile plain tube, no additive", "3º · Tubo seco estéril, sin aditivo"], "Gram, pesquisa de cristais, alfa-defensina, PCR sinovial, calprotectina. Fita de esterase leucocitária na hora (centrifugar se estiver hemático).": ["Gram stain, crystals, alpha-defensin, synovial CRP, calprotectin. Leukocyte esterase strip at the bedside (centrifuge if bloody).", "Gram, cristales, alfa-defensina, PCR sinovial, calprotectina. Tira de esterasa leucocitaria en el momento (centrifugar si es hemático)."], "Fungos e micobactérias:": ["Fungi and mycobacteria:", "Hongos y micobacterias:"], "não de rotina. Pedir em imunossuprimidos, fístula crônica, IPP com cultura negativa e critérios inflamatórios, ou suspeita epidemiológica (tuberculose é endêmica no Brasil).": ["not routinely. Order in immunosuppressed patients, chronic sinus tract, culture-negative PJI with inflammatory criteria, or epidemiological suspicion (tuberculosis is endemic in Brazil).", "no de rutina. Pedir en inmunodeprimidos, fístula crónica, IPP con cultivo negativo y criterios inflamatorios, o sospecha epidemiológica (la tuberculosis es endémica en Brasil)."], "Swab": ["Swab", "Hisopado"], "de fístula ou ferida: não coletar (baixa sensibilidade e contaminação).": ["of a sinus tract or wound: do not collect (low sensitivity and contamination).", "de fístula o herida: no recoger (baja sensibilidad y contaminación)."], "Guardar uma alíquota congelada para eventual teste molecular, se o laboratório permitir.": ["Store a frozen aliquot for possible molecular testing, if the lab allows.", "Guardar una alícuota congelada para eventual prueba molecular, si el laboratorio lo permite."], "Resultados da punção": ["Aspiration results", "Resultados de la punción"], "Paciente usou antibiótico nas 2 semanas antes da punção": ["Patient took antibiotics in the 2 weeks before aspiration", "El paciente usó antibiótico en las 2 semanas previas a la punción"], "Leucócitos": ["White cells", "Leucocitos"], "Esterase leucocitária (fita)": ["Leukocyte esterase (strip)", "Esterasa leucocitaria (tira)"], "Não feita": ["Not done", "No realizada"], "Negativa": ["Negative", "Negativa"], "Traços": ["Trace", "Trazas"], "Alfa-defensina": ["Alpha-defensin", "Alfa-defensina"], "Positiva": ["Positive", "Positiva"], "PCR sinovial": ["Synovial CRP", "PCR sinovial"], "Calprotectina sinovial": ["Synovial calprotectin", "Calprotectina sinovial"], "Adjuvante, não pontua. Corte usual 50 mg/L (ELISA).": ["Adjunct, not scored. Usual cutoff 50 mg/L (ELISA).", "Complementaria, no puntúa. Corte habitual 50 mg/L (ELISA)."], "Cultura do líquido": ["Fluid culture", "Cultivo del líquido"], "Não feita / aguardando": ["Not done / pending", "No realizado / pendiente"], "Positiva, mesmo germe em 2ª amostra": ["Positive, same organism in a 2nd sample", "Positivo, mismo germen en 2ª muestra"], "Germe identificado": ["Organism identified", "Germen identificado"], "Nenhum / desconhecido": ["None / unknown", "Ninguno / desconocido"], "Virulento e sensível (S. aureus MSSA, estreptococo, Gram-negativo sensível)": ["Virulent and susceptible (S. aureus MSSA, streptococcus, susceptible Gram-negative)", "Virulento y sensible (S. aureus SAMS, estreptococo, Gram negativo sensible)"], "Baixa virulência / comensal (SCN, C. acnes)": ["Low virulence / commensal (CoNS, C. acnes)", "Baja virulencia / comensal (SCN, C. acnes)"], "Difícil de tratar (resistente a rifampicina ou quinolona, fungo, multirresistente)": ["Difficult to treat (rifampin- or quinolone-resistant, fungus, multidrug-resistant)", "Difícil de tratar (resistente a rifampicina o quinolona, hongo, multirresistente)"], "Polimicrobiano": ["Polymicrobial", "Polimicrobiano"], "← Exames": ["← Workup", "← Exámenes"], "Próximo: resultado e conduta →": ["Next: results and management →", "Siguiente: resultado y conducta →"], "Leitura da punção": ["Aspiration reading", "Lectura de la punción"], "Atenção": ["Attention", "Atención"], "Antes de interpretar: o que pode confundir": ["Before interpreting: what can mislead", "Antes de interpretar: lo que puede confundir"], "Estas condições elevam celularidade, PCR ou alfa-defensina sem infecção. Ficam aqui porque mudam a leitura dos resultados, e valem também para o intraoperatório.": ["These conditions raise cell counts, CRP or alpha-defensin without infection. They sit here because they change how results are read, and they also apply intraoperatively.", "Estas condiciones elevan el recuento celular, la PCR o la alfa-defensina sin infección. Están aquí porque cambian la lectura de los resultados, y valen también para el intraoperatorio."], "Metalose / reação adversa a metal": ["Metallosis / adverse local tissue reaction", "Metalosis / reacción adversa a metal"], "Gota ou artropatia por cristais": ["Gout or crystal arthropathy", "Gota o artropatía por cristales"], "Artrite inflamatória em atividade": ["Active inflammatory arthritis", "Artritis inflamatoria activa"], "Hematoma / aspirado hemático": ["Hematoma / bloody aspirate", "Hematoma / aspirado hemático"], "Fratura periprotética": ["Periprosthetic fracture", "Fractura periprotésica"], "Dados para a escolha da cirurgia": ["Data for choosing the surgery", "Datos para elegir la cirugía"], "Fixação do implante": ["Implant fixation", "Fijación del implante"], "Indeterminada": ["Undetermined", "Indeterminada"], "Bem fixo": ["Well fixed", "Bien fijo"], "Solto": ["Loose", "Aflojado"], "Partes moles": ["Soft tissues", "Partes blandas"], "Não avaliadas": ["Not assessed", "No evaluadas"], "Adequadas": ["Adequate", "Adecuadas"], "Comprometidas (necessidade de retalho, necrose)": ["Compromised (flap needed, necrosis)", "Comprometidas (necesidad de colgajo, necrosis)"], "DAIR prévio falhou": ["Previous DAIR failed", "DAIR previo fallido"], "Sem condição clínica para cirurgias múltiplas": ["Not fit for multiple surgeries", "Sin condición clínica para cirugías múltiples"], "← Punção": ["← Aspiration", "← Punción"], "Próximo: intraoperatório →": ["Next: intraoperative →", "Siguiente: intraoperatorio →"], "ICM 2018 · escore pré-operatório": ["ICM 2018 · preoperative score", "ICM 2018 · puntuación preoperatoria"], "EBJIS 2021 · pré-operatório": ["EBJIS 2021 · preoperative", "EBJIS 2021 · preoperatorio"], "Conduta": ["Management", "Conducta"], "Atenção na interpretação": ["Interpretation caveats", "Atención en la interpretación"], "Protocolo de coleta no centro cirúrgico": ["Sampling protocol in the operating room", "Protocolo de toma de muestras en quirófano"], "Antibiótico": ["Antibiotics", "Antibiótico"], "Com germe já conhecido, a profilaxia habitual pode ser feita. Com germe desconhecido, combine com a infectologia se o antibiótico será dado só depois da coleta das amostras.": ["If the organism is already known, routine prophylaxis can be given. If it is unknown, agree with infectious diseases whether antibiotics will be given only after sampling.", "Con germen ya conocido, puede hacerse la profilaxis habitual. Con germen desconocido, acuerde con infectología si el antibiótico se dará solo tras la toma de muestras."], "O que colher": ["What to collect", "Qué recoger"], "Líquido articular, antes da artrotomia e da irrigação": ["Joint fluid, before arthrotomy and irrigation", "Líquido articular, antes de la artrotomía y del lavado"], "Aspirar com seringa e inocular em frascos de hemocultura aeróbio e anaeróbio; tubo seco para Gram e cristais; EDTA para celularidade se ainda não houver.": ["Aspirate with a syringe and inoculate aerobic and anaerobic blood culture bottles; plain tube for Gram stain and crystals; EDTA for cell count if not yet done.", "Aspirar con jeringa e inocular en frascos de hemocultivo aerobio y anaerobio; tubo seco para Gram y cristales; EDTA para recuento celular si aún no se tiene."], "4 a 6 amostras no total, pelo menos 3 de tecido periprotético": ["4 to 6 samples in total, at least 3 of periprosthetic tissue", "4 a 6 muestras en total, al menos 3 de tejido periprotésico"], "(ICM 2025). Membrana de interface, sinóvia inflamada, tecido junto ao osso. Instrumental limpo para cada amostra (nova lâmina e pinça), cada uma em frasco estéril seco e identificado, sem formol. Não é preciso colocar soro; se o transporte demorar, umedecer com poucas gotas de soro estéril. Enviar logo ao laboratório (idealmente em até 2 horas).": ["(ICM 2025). Interface membrane, inflamed synovium, tissue next to bone. Clean instruments for each sample (new blade and forceps), each in a dry, labeled sterile container, without formalin. No need to add saline; if transport is delayed, moisten with a few drops of sterile saline. Send promptly to the lab (ideally within 2 hours).", "(ICM 2025). Membrana de interfase, sinovial inflamada, tejido junto al hueso. Instrumental limpio para cada muestra (hoja y pinza nuevas), cada una en frasco estéril seco e identificado, sin formol. No es necesario añadir suero; si el transporte se retrasa, humedecer con unas gotas de suero estéril. Enviar pronto al laboratorio (idealmente en 2 horas)."], "Histologia": ["Histology", "Histología"], "Amostras separadas em formol para anatomopatológico (≥ 5 neutrófilos em ≥ 5 campos de 400×). Congelação intraoperatória quando o resultado mudar a conduta, por exemplo entre revisão em 1 ou 2 tempos.": ["Separate samples in formalin for pathology (≥ 5 neutrophils in ≥ 5 fields at 400×). Intraoperative frozen section when the result changes management, for example between 1- and 2-stage revision.", "Muestras separadas en formol para anatomía patológica (≥ 5 neutrófilos en ≥ 5 campos de 400×). Biopsia intraoperatoria por congelación cuando el resultado cambie la conducta, por ejemplo entre revisión en 1 o 2 tiempos."], "Sonicação dos componentes retirados": ["Sonication of removed components", "Sonicación de los componentes retirados"], "Sempre que houver retirada de implante e o serviço tiver sonicação: componentes em recipiente rígido estéril, sem formol. No DAIR, o polietileno trocado também pode ser sonicado. Positivo se > 50 UFC/mL (> 200 se centrifugado). ICM 2025: pode melhorar a detecção (evidência moderada, 94%).": ["Whenever an implant is removed and sonication is available: components in a rigid sterile container, without formalin. In DAIR, the exchanged polyethylene can also be sonicated. Positive if > 50 CFU/mL (> 200 if centrifuged). ICM 2025: may improve detection (moderate evidence, 94%).", "Siempre que se retire el implante y el servicio disponga de sonicación: componentes en recipiente rígido estéril, sin formol. En el DAIR, el polietileno recambiado también puede sonicarse. Positivo si > 50 UFC/mL (> 200 si centrifugado). ICM 2025: puede mejorar la detección (evidencia moderada, 94%)."], "Sem sonicador:": ["No sonicator:", "Sin sonicador:"], "colha normalmente. As 4 a 6 amostras de tecido e o líquido em frasco de hemocultura continuam sendo a base do diagnóstico. Não faça swab do implante.": ["sample as usual. The 4 to 6 tissue samples and the fluid in blood culture bottles remain the basis of the diagnosis. Do not swab the implant.", "recoja normalmente. Las 4 a 6 muestras de tejido y el líquido en frasco de hemocultivo siguen siendo la base del diagnóstico. No haga hisopado del implante."], "No laboratório:": ["In the lab:", "En el laboratorio:"], "pedir homogeneização mecânica dos tecidos (ICM 2025), inoculação em frascos de hemocultura (melhora o rendimento) e incubação por até 14 dias.": ["request mechanical homogenization of tissues (ICM 2025), inoculation into blood culture bottles (improves yield) and incubation for up to 14 days.", "solicitar homogeneización mecánica de los tejidos (ICM 2025), inoculación en frascos de hemocultivo (mejora el rendimiento) e incubación hasta 14 días."], "mesmos critérios da punção (imunossupressão, fístula crônica, cultura negativa com inflamação, suspeita de tuberculose).": ["same criteria as for aspiration (immunosuppression, chronic sinus tract, culture-negative with inflammation, suspected tuberculosis).", "mismos criterios que en la punción (inmunosupresión, fístula crónica, cultivo negativo con inflamación, sospecha de tuberculosis)."], "Molecular (NGS/PCR):": ["Molecular (NGS/PCR):", "Molecular (NGS/PCR):"], "adjuvante para IPP com cultura negativa; guardar tecido ou líquido congelado.": ["adjunct for culture-negative PJI; store frozen tissue or fluid.", "complementario para IPP con cultivo negativo; guardar tejido o líquido congelado."], "Achados intraoperatórios": ["Intraoperative findings", "Hallazgos intraoperatorios"], "Purulência": ["Purulence", "Purulencia"], "Não avaliada": ["Not assessed", "No evaluada"], "Não": ["No", "No"], "Sim": ["Yes", "Sí"], "Amostras de tecido enviadas": ["Tissue samples sent", "Muestras de tejido enviadas"], "amostras": ["samples", "muestras"], "Histologia (400×)": ["Histology (400×)", "Histología (400×)"], "≥ 5 neutrófilos em 1 campo": ["≥ 5 neutrophils in 1 field", "≥ 5 neutrófilos en 1 campo"], "≥ 5 neutrófilos em ≥ 5 campos": ["≥ 5 neutrophils in ≥ 5 fields", "≥ 5 neutrófilos en ≥ 5 campos"], "Microrganismos visíveis": ["Visible microorganisms", "Microorganismos visibles"], "Culturas de tecido": ["Tissue cultures", "Cultivos de tejido"], "Aguardando": ["Pending", "Pendiente"], "Todas negativas": ["All negative", "Todos negativos"], "1 positiva": ["1 positive", "1 positivo"], "≥ 2 com o mesmo germe": ["≥ 2 with the same organism", "≥ 2 con el mismo germen"], "Germes diferentes em amostras diferentes": ["Different organisms in different samples", "Gérmenes distintos en muestras distintas"], "Sonicação": ["Sonication", "Sonicación"], "UFC/mL": ["CFU/mL", "UFC/mL"], "Sonicado centrifugado": ["Centrifuged sonicate", "Sonicado centrifugado"], "Sequenciamento (NGS)": ["Sequencing (NGS)", "Secuenciación (NGS)"], "Negativo": ["Negative", "Negativo"], "Positivo": ["Positive", "Positivo"], "O tipo de germe vem do campo \"Germe identificado\" da etapa 3; atualize-o com o resultado das culturas.": ["The organism type comes from the \"Organism identified\" field in step 3; update it with the culture results.", "El tipo de germen viene del campo \"Germen identificado\" de la etapa 3; actualícelo con el resultado de los cultivos."], "← Resultado e conduta": ["← Results and management", "← Resultado y conducta"], "Classificação final": ["Final classification", "Clasificación final"], "Como interpretar as culturas": ["How to interpret cultures", "Cómo interpretar los cultivos"], "Ferramenta de apoio à decisão.": ["Decision-support tool.", "Herramienta de apoyo a la decisión."], "Não substitui o julgamento clínico nem a discussão com a infectologia. Nenhuma definição é padrão-ouro. O ICM 2025 não publicou um novo escore; a classificação usa o ICM 2018 e a EBJIS 2021, e as recomendações de 2025 entram exame a exame.": ["It does not replace clinical judgment or discussion with infectious diseases. No definition is a gold standard. ICM 2025 did not publish a new score; classification uses ICM 2018 and EBJIS 2021, and the 2025 recommendations are applied test by test.", "No sustituye el juicio clínico ni la discusión con infectología. Ninguna definición es patrón oro. El ICM 2025 no publicó una nueva puntuación; la clasificación usa el ICM 2018 y la EBJIS 2021, y las recomendaciones de 2025 se aplican examen por examen."], "Ferrini A et al. Differences between ICM 2018 and ICM 2025 (12 semanas de antibiótico após DAIR; repetição de DAIR). J Arthroplasty 2026;41(2):304-7.": ["Ferrini A et al. Differences between ICM 2018 and ICM 2025 (12 weeks of antibiotics after DAIR; repeat DAIR). J Arthroplasty 2026;41(2):304-7.", "Ferrini A et al. Differences between ICM 2018 and ICM 2025 (12 semanas de antibiótico tras DAIR; repetición de DAIR). J Arthroplasty 2026;41(2):304-7."], "pós-operatória precoce (menos de 4 semanas)": ["early postoperative (less than 4 weeks)", "posoperatoria precoz (menos de 4 semanas)"], "hematogênica aguda (sintomas há menos de 3 semanas)": ["acute hematogenous (symptoms for less than 3 weeks)", "hematógena aguda (síntomas de menos de 3 semanas)"], "crônica ou tardia": ["chronic or late", "crónica o tardía"], "Marque os achados": ["Check the findings", "Marque los hallazgos"], "Urgência": ["Emergency", "Urgencia"], "Sepse: tratar como emergência": ["Sepsis: treat as an emergency", "Sepsis: tratar como emergencia"], "Colher hemoculturas e puncionar o joelho sem atrasar o tratamento.": ["Draw blood cultures and aspirate the knee without delaying treatment.", "Extraer hemocultivos y puncionar la rodilla sin retrasar el tratamiento."], "Iniciar antibiótico após as coletas e avaliar cirurgia de urgência com a infectologia.": ["Start antibiotics after sampling and assess urgent surgery with infectious diseases.", "Iniciar antibiótico tras las tomas y valorar cirugía urgente con infectología."], "IPP confirmada (critério maior)": ["PJI confirmed (major criterion)", "IPP confirmada (criterio mayor)"], "Fístula ou prótese exposta confirmam infecção": ["Sinus tract or exposed prosthesis confirms infection", "Fístula o prótesis expuesta confirman infección"], "PCR, VHS e radiografias para planejar a cirurgia.": ["CRP, ESR and radiographs to plan surgery.", "PCR, VSG y radiografías para planificar la cirugía."], "Punção para identificar o germe antes da cirurgia. Não fazer swab da fístula.": ["Aspirate to identify the organism before surgery. Do not swab the sinus tract.", "Punción para identificar el germen antes de la cirugía. No hacer hisopado de la fístula."], "Planejar o tratamento cirúrgico com a infectologia.": ["Plan surgical treatment with infectious diseases.", "Planificar el tratamiento quirúrgico con infectología."], "Alta suspeita": ["High suspicion", "Alta sospecha"], "Investigação imediata": ["Immediate workup", "Estudio inmediato"], "PCR, VHS, radiografias e punção do joelho.": ["CRP, ESR, radiographs and knee aspiration.", "PCR, VSG, radiografías y punción de rodilla."], "Não iniciar antibiótico antes da punção se o paciente estiver estável.": ["Do not start antibiotics before aspiration if the patient is stable.", "No iniciar antibiótico antes de la punción si el paciente está estable."], "Investigação indicada": ["Workup indicated", "Estudio indicado"], "Pedir PCR, VHS e radiografias": ["Order CRP, ESR and radiographs", "Pedir PCR, VSG y radiografías"], "Seguir para a etapa 2. A punção será indicada conforme os exames e a suspeita.": ["Go to step 2. Aspiration will be indicated based on the tests and the level of suspicion.", "Pase a la etapa 2. La punción se indicará según los exámenes y la sospecha."], "Febre ou bacteremia: colher hemoculturas.": ["Fever or bacteremia: draw blood cultures.", "Fiebre o bacteriemia: extraer hemocultivos."], "Sem sinais de alerta": ["No red flags", "Sin signos de alerta"], "Baixa suspeita clínica": ["Low clinical suspicion", "Baja sospecha clínica"], "Se a ATJ estiver dolorosa, pedir PCR e VHS mesmo assim: toda ATJ dolorosa deve ter infecção afastada.": ["If the TKA is painful, order CRP and ESR anyway: every painful TKA should have infection ruled out.", "Si la ATR es dolorosa, pida PCR y VSG de todos modos: en toda ATR dolorosa debe descartarse infección."], "{0} sintomas suspeitos": ["{0} suspicious symptoms", "{0} síntomas sospechosos"], "1 sintoma suspeito": ["1 suspicious symptom", "1 síntoma sospechoso"], "{0} fatores de risco": ["{0} risk factors", "{0} factores de riesgo"], "1 fator de risco": ["1 risk factor", "1 factor de riesgo"], "Menos de 6 semanas: usar limiares agudos (PCR > 100 mg/L, leucócitos > 10.000/µL, PMN > 90%)": ["Less than 6 weeks: use acute thresholds (CRP > 100 mg/L, WBC > 10,000/µL, PMN > 90%)", "Menos de 6 semanas: usar umbrales agudos (PCR > 100 mg/L, leucocitos > 10.000/µL, PMN > 90%)"], "Cenário: {0}.": ["Scenario: {0}.", "Escenario: {0}."], "PCR": ["CRP", "PCR"], "Hemoculturas (febre, início agudo ou bacteremia)": ["Blood cultures (fever, acute onset or bacteremia)", "Hemocultivos (fiebre, inicio agudo o bacteriemia)"], "feito": ["done", "hecho"], "falta": ["missing", "falta"], "Preencha PCR e VHS": ["Enter CRP and ESR", "Complete PCR y VSG"], "Punção: recomendada": ["Aspiration: recommended", "Punción: recomendada"], "Recomendada para identificar o germe": ["Recommended to identify the organism", "Recomendada para identificar el germen"], "O diagnóstico já está confirmado pela fístula; a cultura do líquido orienta o antibiótico e o tipo de cirurgia.": ["The diagnosis is already confirmed by the sinus tract; fluid culture guides antibiotics and the type of surgery.", "El diagnóstico ya está confirmado por la fístula; el cultivo del líquido orienta el antibiótico y el tipo de cirugía."], "Punção: obrigatória": ["Aspiration: mandatory", "Punción: obligatoria"], "Punção obrigatória": ["Aspiration mandatory", "Punción obligatoria"], "PCR acima do limiar agudo (100 mg/L).": ["CRP above the acute threshold (100 mg/L).", "PCR por encima del umbral agudo (100 mg/L)."], "PCR acima de 10 mg/L ou VHS acima de 30 mm/h.": ["CRP above 10 mg/L or ESR above 30 mm/h.", "PCR por encima de 10 mg/L o VSG por encima de 30 mm/h."], "Suspeita clínica alta ou quadro agudo (IDSA: puncionar toda suspeita de IPP aguda).": ["High clinical suspicion or acute presentation (IDSA: aspirate every suspected acute PJI).", "Sospecha clínica alta o cuadro agudo (IDSA: puncionar toda sospecha de IPP aguda)."], "Soltura ou osteólise: afastar infecção antes de planejar revisão asséptica.": ["Loosening or osteolysis: rule out infection before planning an aseptic revision.", "Aflojamiento u osteólisis: descartar infección antes de planificar una revisión aséptica."], "Punção: considerar": ["Aspiration: consider", "Punción: considerar"], "Considerar punção": ["Consider aspiration", "Considerar punción"], "Suspeita intermediária: D-dímero ou fibrinogênio elevado, ou sintoma isolado, com PCR e VHS normais.": ["Intermediate suspicion: elevated D-dimer or fibrinogen, or an isolated symptom, with normal CRP and ESR.", "Sospecha intermedia: dímero D o fibrinógeno elevado, o síntoma aislado, con PCR y VSG normales."], "Punção: não indicada agora": ["Aspiration: not indicated now", "Punción: no indicada ahora"], "Punção não indicada no momento": ["Aspiration not indicated at this time", "Punción no indicada por ahora"], "PCR e VHS normais e baixa suspeita: investigar causa mecânica.": ["Normal CRP and ESR and low suspicion: investigate a mechanical cause.", "PCR y VSG normales y baja sospecha: investigar causa mecánica."], "Repetir PCR e VHS se os sintomas persistirem. Se houver revisão, colher culturas e histologia mesmo assim.": ["Repeat CRP and ESR if symptoms persist. If a revision is done, send cultures and histology anyway.", "Repetir PCR y VSG si los síntomas persisten. Si hay revisión, enviar cultivos e histología de todos modos."], "Causa mecânica na radiografia não exclui infecção associada.": ["A mechanical cause on radiographs does not exclude associated infection.", "Una causa mecánica en la radiografía no excluye infección asociada."], "Hemoculturas positivas: tratar a bacteremia e considerar IPP hematogênica.": ["Positive blood cultures: treat the bacteremia and consider hematogenous PJI.", "Hemocultivos positivos: tratar la bacteriemia y considerar IPP hematógena."], "acima": ["above", "por encima"], "abaixo": ["below", "por debajo"], "Leucócitos {0}/µL: {1} de {2}": ["WBC {0}/µL: {1} {2}", "Leucocitos {0}/µL: {1} de {2}"], "(limiar agudo)": ["(acute threshold)", "(umbral agudo)"], "PMN {0}%: {1} de {2}%": ["PMN {0}%: {1} {2}%", "PMN {0}%: {1} de {2}%"], "negativa": ["negative", "negativa"], "traços": ["trace", "trazas"], "Esterase {0}": ["Esterase {0}", "Esterasa {0}"], "positiva (pontua)": ["positive (scores)", "positiva (puntúa)"], "não pontua": ["does not score", "no puntúa"], "Alfa-defensina positiva": ["Positive alpha-defensin", "Alfa-defensina positiva"], "Alfa-defensina negativa": ["Negative alpha-defensin", "Alfa-defensina negativa"], "PCR sinovial {0} mg/L: {1} de 6,9": ["Synovial CRP {0} mg/L: {1} 6.9", "PCR sinovial {0} mg/L: {1} de 6,9"], "Calprotectina ≥ 50 mg/L (adjuvante)": ["Calprotectin ≥ 50 mg/L (adjunct)", "Calprotectina ≥ 50 mg/L (complementaria)"], "Calprotectina < 50 mg/L (adjuvante)": ["Calprotectin < 50 mg/L (adjunct)", "Calprotectina < 50 mg/L (complementaria)"], "Cultura: negativa": ["Culture: negative", "Cultivo: negativo"], "Cultura: positiva": ["Culture: positive", "Cultivo: positivo"], "Cultura: positiva com o mesmo germe em 2ª amostra (critério maior)": ["Culture: positive with the same organism in a 2nd sample (major criterion)", "Cultivo: positivo con el mismo germen en 2ª muestra (criterio mayor)"], "Preencha os resultados da punção.": ["Enter the aspiration results.", "Complete los resultados de la punción."], "Antibiótico recente: cultura e celularidade podem vir falsamente negativas. Se negativas e a suspeita persistir, repetir após 2 semanas sem antibiótico.": ["Recent antibiotics: culture and cell count may be falsely negative. If negative and suspicion persists, repeat after 2 weeks off antibiotics.", "Antibiótico reciente: cultivo y recuento celular pueden salir falsamente negativos. Si son negativos y la sospecha persiste, repetir tras 2 semanas sin antibiótico."], "Uma cultura com germe de baixa virulência pode ser contaminante: confirmar com outra amostra e com o quadro inflamatório.": ["A single culture with a low-virulence organism may be a contaminant: confirm with another sample and the inflammatory picture.", "Un cultivo con germen de baja virulencia puede ser contaminante: confirmar con otra muestra y con el cuadro inflamatorio."], "Esterase em traços ou + não pontua; se o líquido estava hemático, repetir após centrifugar.": ["Trace or + esterase does not score; if the fluid was bloody, repeat after centrifugation.", "Esterasa en trazas o + no puntúa; si el líquido era hemático, repetir tras centrifugar."], "Resultados inseridos": ["Results entered", "Resultados ingresados"], "Fístula ou prótese exposta": ["Sinus tract or exposed prosthesis", "Fístula o prótesis expuesta"], "2 culturas com o mesmo germe": ["2 cultures with the same organism", "2 cultivos con el mismo germen"], "PCR > {0} mg/L ou D-dímero > 860 ng/mL": ["CRP > {0} mg/L or D-dimer > 860 ng/mL", "PCR > {0} mg/L o dímero D > 860 ng/mL"], "VHS > 30 mm/h": ["ESR > 30 mm/h", "VSG > 30 mm/h"], "Leucócitos > {0}/µL ou esterase ++": ["WBC > {0}/µL or esterase ++", "Leucocitos > {0}/µL o esterasa ++"], "PMN > {0}%": ["PMN > {0}%", "PMN > {0}%"], "PCR sinovial > 6,9 mg/L": ["Synovial CRP > 6.9 mg/L", "PCR sinovial > 6,9 mg/L"], "Preencha os dados": ["Enter the data", "Complete los datos"], "Infectado": ["Infected", "Infectado"], "critério maior": ["major criterion", "criterio mayor"], "pré-op {0} pts": ["preop {0} pts", "preop {0} pts"], "Possivelmente infectado": ["Possibly infected", "Posiblemente infectado"], "Não infectado": ["Not infected", "No infectado"], "maior": ["major", "mayor"], "Leucócitos sinoviais > 3.000/µL": ["Synovial WBC > 3,000/µL", "Leucocitos sinoviales > 3.000/µL"], "PMN sinoviais > 80%": ["Synovial PMN > 80%", "PMN sinoviales > 80%"], "Cultura do líquido + mesmo germe em 2ª amostra": ["Fluid culture + same organism in a 2nd sample", "Cultivo del líquido + mismo germen en 2ª muestra"], "Problema prévio de cicatrização": ["Previous wound-healing problem", "Problema previo de cicatrización"], "Febre ou bacteremia recente": ["Recent fever or bacteremia", "Fiebre o bacteriemia reciente"], "Soltura radiográfica precoce": ["Early radiographic loosening", "Aflojamiento radiográfico precoz"], "PCR > 10 mg/L": ["CRP > 10 mg/L", "PCR > 10 mg/L"], "Leucócitos sinoviais > 1.500/µL": ["Synovial WBC > 1,500/µL", "Leucocitos sinoviales > 1.500/µL"], "PMN sinoviais > 65%": ["Synovial PMN > 65%", "PMN sinoviales > 65%"], "Cultura do líquido positiva": ["Positive fluid culture", "Cultivo del líquido positivo"], "≥ 2 culturas intraoperatórias com o mesmo germe": ["≥ 2 intraoperative cultures with the same organism", "≥ 2 cultivos intraoperatorios con el mismo germen"], "Sonicação > {0} UFC/mL": ["Sonication > {0} CFU/mL", "Sonicación > {0} UFC/mL"], "Histologia: ≥ 5 neutrófilos em ≥ 5 campos": ["Histology: ≥ 5 neutrophils in ≥ 5 fields", "Histología: ≥ 5 neutrófilos en ≥ 5 campos"], "Histologia: microrganismos visíveis": ["Histology: visible microorganisms", "Histología: microorganismos visibles"], "Purulência intraoperatória": ["Intraoperative purulence", "Purulencia intraoperatoria"], "Cultura intraoperatória isolada positiva": ["Single positive intraoperative culture", "Cultivo intraoperatorio aislado positivo"], "Sonicação > 1 UFC/mL": ["Sonication > 1 CFU/mL", "Sonicación > 1 UFC/mL"], "Histologia: ≥ 5 neutrófilos em 1 campo": ["Histology: ≥ 5 neutrophils in 1 field", "Histología: ≥ 5 neutrófilos en 1 campo"], "Infecção confirmada": ["Infection confirmed", "Infección confirmada"], "confirmada": ["confirmed", "confirmada"], "Infecção provável": ["Infection likely", "Infección probable"], "provável": ["likely", "probable"], "Achado sugestivo isolado ({0}) sem outro teste positivo": ["Isolated suggestive finding ({0}) with no other positive test", "Hallazgo sugestivo aislado ({0}) sin otra prueba positiva"], "Teste sugestivo isolado ({0}) sem sinal clínico ou PCR elevada": ["Isolated suggestive test ({0}) without a clinical sign or raised CRP", "Prueba sugestiva aislada ({0}) sin signo clínico ni PCR elevada"], "Nenhum achado sugestivo ou confirmatório": ["No suggestive or confirmatory finding", "Ningún hallazgo sugestivo o confirmatorio"], "Sem punção, cultura ou histologia: dados insuficientes para afastar": ["No aspiration, culture or histology: insufficient data to rule out", "Sin punción, cultivo ni histología: datos insuficientes para descartar"], "Dados incompletos": ["Incomplete data", "Datos incompletos"], "incompleto": ["incomplete", "incompleto"], "Infecção improvável": ["Infection unlikely", "Infección improbable"], "improvável": ["unlikely", "improbable"], "Sem condição cirúrgica": ["Not a surgical candidate", "Sin condición quirúrgica"], "Supressão antibiótica ou salvamento": ["Antibiotic suppression or salvage", "Supresión antibiótica o rescate"], "Sem condição para cirurgias múltiplas: discutir supressão antibiótica crônica, DAIR paliativo ou procedimentos de salvamento com a equipe multidisciplinar.": ["Not fit for multiple surgeries: discuss chronic antibiotic suppression, palliative DAIR or salvage procedures with the multidisciplinary team.", "Sin condición para cirugías múltiples: discutir supresión antibiótica crónica, DAIR paliativo o procedimientos de rescate con el equipo multidisciplinario."], "fora da janela (mais de 4 semanas da cirurgia ou sintomas há 3 semanas ou mais)": ["outside the window (more than 4 weeks after surgery or symptoms for 3 weeks or more)", "fuera de la ventana (más de 4 semanas desde la cirugía o síntomas de 3 semanas o más)"], "janela de tempo não informada (etapa 1)": ["time window not provided (step 1)", "ventana de tiempo no informada (etapa 1)"], "implante solto": ["loose implant", "implante aflojado"], "fístula": ["sinus tract", "fístula"], "partes moles comprometidas": ["compromised soft tissues", "partes blandas comprometidas"], "Cirurgia: DAIR": ["Surgery: DAIR", "Cirugía: DAIR"], "DAIR: desbridamento, antibiótico e retenção do implante": ["DAIR: debridement, antibiotics and implant retention", "DAIR: desbridamiento, antibiótico y retención del implante"], "Troca obrigatória dos componentes modulares (polietileno), desbridamento amplo e irrigação abundante.": ["Mandatory exchange of modular components (polyethylene), thorough debridement and copious irrigation.", "Recambio obligatorio de los componentes modulares (polietileno), desbridamiento amplio e irrigación abundante."], "Confirmar no intraoperatório que o implante está bem fixo; se estiver solto, converter para revisão.": ["Confirm intraoperatively that the implant is well fixed; if loose, convert to revision.", "Confirmar en el intraoperatorio que el implante está bien fijo; si está aflojado, convertir a revisión."], "Antibiótico por no mínimo 12 semanas após o DAIR (ICM 2025).": ["Antibiotics for at least 12 weeks after DAIR (ICM 2025).", "Antibiótico durante al menos 12 semanas tras el DAIR (ICM 2025)."], "Escores prognósticos ajudam a selecionar: KLIC (pós-operatória precoce) e CRIME80 (hematogênica).": ["Prognostic scores help with selection: KLIC (early postoperative) and CRIME80 (hematogenous).", "Las escalas pronósticas ayudan a seleccionar: KLIC (posoperatoria precoz) y CRIME80 (hematógena)."], "Fixação do implante ainda indeterminada: avaliar radiografias e confirmar na cirurgia.": ["Implant fixation still undetermined: assess radiographs and confirm at surgery.", "Fijación del implante aún indeterminada: evaluar radiografías y confirmar en la cirugía."], "Germe difícil de tratar: maior risco de falha do DAIR; considerar revisão.": ["Difficult-to-treat organism: higher risk of DAIR failure; consider revision.", "Germen difícil de tratar: mayor riesgo de fracaso del DAIR; considerar revisión."], "DAIR prévio falhou: o ICM 2025 indica que repetir o DAIR pode aumentar a taxa de sucesso em casos selecionados; avaliar também a revisão.": ["Previous DAIR failed: ICM 2025 states that repeat DAIR may increase the success rate in selected cases; also consider revision.", "DAIR previo fallido: el ICM 2025 indica que repetir el DAIR puede aumentar la tasa de éxito en casos seleccionados; valorar también la revisión."], "germe difícil de tratar": ["difficult-to-treat organism", "germen difícil de tratar"], "infecção polimicrobiana": ["polymicrobial infection", "infección polimicrobiana"], "germe desconhecido": ["unknown organism", "germen desconocido"], "sepse": ["sepsis", "sepsis"], "Cirurgia: revisão": ["Surgery: revision", "Cirugía: revisión"], "Retirada da ATJ: revisão em 1 tempo é opção": ["TKA removal: 1-stage revision is an option", "Retirada de la ATR: la revisión en 1 tiempo es una opción"], "Germe conhecido e sensível, partes moles adequadas e sem sepse.": ["Known, susceptible organism, adequate soft tissues and no sepsis.", "Germen conocido y sensible, partes blandas adecuadas y sin sepsis."], "A revisão em 2 tempos continua sendo alternativa; decidir com a infectologia e conforme a experiência do serviço.": ["2-stage revision remains an alternative; decide with infectious diseases and according to the team's experience.", "La revisión en 2 tiempos sigue siendo alternativa; decidir con infectología y según la experiencia del servicio."], "Cirurgia: 2 tempos": ["Surgery: 2-stage", "Cirugía: 2 tiempos"], "Retirada da ATJ: revisão em 2 tempos": ["TKA removal: 2-stage revision", "Retirada de la ATR: revisión en 2 tiempos"], "Motivo: {0}.": ["Reason: {0}.", "Motivo: {0}."], "1º tempo: retirada, desbridamento e espaçador com antibiótico; reimplante após controle da infecção.": ["Stage 1: removal, debridement and antibiotic spacer; reimplantation after infection control.", "1.er tiempo: retirada, desbridamiento y espaciador con antibiótico; reimplante tras el control de la infección."], "DAIR não indicado: {0}.": ["DAIR not indicated: {0}.", "DAIR no indicado: {0}."], "Após falha de DAIR, a retirada do implante deve ser considerada.": ["After DAIR failure, implant removal should be considered.", "Tras el fracaso del DAIR, debe considerarse la retirada del implante."], "Sem germe identificado: se o paciente estiver estável, evitar antibiótico até a coleta intraoperatória.": ["No organism identified: if the patient is stable, avoid antibiotics until intraoperative sampling.", "Sin germen identificado: si el paciente está estable, evitar antibiótico hasta la toma intraoperatoria."], "Zona cinzenta": ["Gray zone", "Zona gris"], "Zona cinzenta: completar a investigação": ["Gray zone: complete the workup", "Zona gris: completar el estudio"], "Pedir D-dímero (ICM 2025: útil quando há incerteza).": ["Order D-dimer (ICM 2025: useful when there is uncertainty).", "Pedir dímero D (ICM 2025: útil cuando hay incertidumbre)."], "Alfa-defensina ou calprotectina no líquido.": ["Alpha-defensin or calprotectin in the fluid.", "Alfa-defensina o calprotectina en el líquido."], "Repetir a punção após 2 semanas sem antibiótico.": ["Repeat the aspiration after 2 weeks off antibiotics.", "Repetir la punción tras 2 semanas sin antibiótico."], "Considerar cintilografia com leucócitos marcados ou biópsia sinovial.": ["Consider labeled leukocyte scintigraphy or synovial biopsy.", "Considerar gammagrafía con leucocitos marcados o biopsia sinovial."], "Se a revisão for feita por outra causa, usar congelação e culturas intraoperatórias para decidir entre revisão asséptica e em 2 tempos (etapa 5).": ["If revision is done for another reason, use frozen section and intraoperative cultures to decide between aseptic and 2-stage revision (step 5).", "Si la revisión se hace por otra causa, usar biopsia por congelación y cultivos intraoperatorios para decidir entre revisión aséptica y en 2 tiempos (etapa 5)."], "Investigar causa mecânica (soltura asséptica, instabilidade, desalinhamento, dor referida).": ["Investigate a mechanical cause (aseptic loosening, instability, malalignment, referred pain).", "Investigar causa mecánica (aflojamiento aséptico, inestabilidad, desalineación, dolor referido)."], "Se houver revisão, colher 4 a 6 amostras e histologia de rotina: culturas positivas inesperadas acontecem.": ["If a revision is done, send 4 to 6 samples and histology routinely: unexpected positive cultures happen.", "Si hay revisión, enviar 4 a 6 muestras e histología de rutina: los cultivos positivos inesperados ocurren."], "Faltam dados": ["Missing data", "Faltan datos"], "Faltam dados para classificar": ["Not enough data to classify", "Faltan datos para clasificar"], "Complete PCR, VHS e a punção conforme a etapa 2.": ["Complete CRP, ESR and aspiration as in step 2.", "Complete PCR, VSG y la punción según la etapa 2."], "Pós-operatório precoce: escore calculado com limiares agudos; a EBJIS pede cautela com PCR e celularidade nessa fase.": ["Early postoperative: score calculated with acute thresholds; EBJIS advises caution with CRP and cell counts in this phase.", "Posoperatorio precoz: puntuación calculada con umbrales agudos; la EBJIS pide cautela con la PCR y el recuento celular en esta fase."], "Metalose: celularidade, PCR e alfa-defensina podem ser falsamente positivas; a EBJIS desconsidera esses testes.": ["Metallosis: cell count, CRP and alpha-defensin may be falsely positive; EBJIS disregards these tests.", "Metalosis: recuento celular, PCR y alfa-defensina pueden ser falsamente positivos; la EBJIS no considera estas pruebas."], "Cristais: pesquisar gota ou pseudogota; a EBJIS desconsidera PCR e celularidade.": ["Crystals: look for gout or pseudogout; EBJIS disregards CRP and cell counts.", "Cristales: buscar gota o pseudogota; la EBJIS no considera la PCR ni el recuento celular."], "Artrite inflamatória: o ICM 2025 considera incerto o efeito sobre os biomarcadores; marcadores sinoviais parecem mais confiáveis que os séricos.": ["Inflammatory arthritis: ICM 2025 considers its effect on biomarkers uncertain; synovial markers appear more reliable than serum markers.", "Artritis inflamatoria: el ICM 2025 considera incierto su efecto sobre los biomarcadores; los marcadores sinoviales parecen más fiables que los séricos."], "Hematoma ou aspirado hemático: alfa-defensina inválida; esterase só após centrifugar.": ["Hematoma or bloody aspirate: alpha-defensin invalid; esterase only after centrifugation.", "Hematoma o aspirado hemático: alfa-defensina no válida; esterasa solo tras centrifugar."], "Fratura periprotética: PCR e celularidade sobem sem infecção.": ["Periprosthetic fracture: CRP and cell counts rise without infection.", "Fractura periprotésica: la PCR y el recuento celular suben sin infección."], "Antibiótico antes da punção: resultados negativos podem ser falsos.": ["Antibiotics before aspiration: negative results may be false.", "Antibiótico antes de la punción: los resultados negativos pueden ser falsos."], "A alfa-defensina positiva não foi usada na EBJIS por causa das condições marcadas.": ["The positive alpha-defensin was not used in EBJIS because of the conditions checked.", "La alfa-defensina positiva no se usó en la EBJIS por las condiciones marcadas."], "Histologia positiva": ["Positive histology", "Histología positiva"], "Cultura única positiva": ["Single positive culture", "Cultivo único positivo"], "≥ 2 culturas com o mesmo germe": ["≥ 2 cultures with the same organism", "≥ 2 cultivos con el mismo germen"], "ICM —": ["ICM —", "ICM —"], "ICM: infectado": ["ICM: infected", "ICM: infectado"], "total {0} pts": ["total {0} pts", "total {0} pts"], "ICM: inconclusivo": ["ICM: inconclusive", "ICM: no concluyente"], "ICM: não infectado": ["ICM: not infected", "ICM: no infectado"], "Pré-operatório {0} + intraoperatório {1} = {2} pontos": ["Preoperative {0} + intraoperative {1} = {2} points", "Preoperatorio {0} + intraoperatorio {1} = {2} puntos"], "Preencha os achados intraoperatórios.": ["Enter the intraoperative findings.", "Complete los hallazgos intraoperatorios."], "≥ 2 amostras com o mesmo germe são critério maior. Ajustar o antibiótico pelo antibiograma com a infectologia.": ["≥ 2 samples with the same organism are a major criterion. Adjust antibiotics to the susceptibility results with infectious diseases.", "≥ 2 muestras con el mismo germen son criterio mayor. Ajustar el antibiótico según el antibiograma con infectología."], "Valorizar": ["Take it seriously", "Valorar"], "Germe virulento (S. aureus, Gram-negativo, estreptococo) em uma amostra raramente é contaminante, sobretudo com inflamação. EBJIS: infecção provável; ICM: +2 pontos.": ["A virulent organism (S. aureus, Gram-negative, streptococcus) in one sample is rarely a contaminant, especially with inflammation. EBJIS: infection likely; ICM: +2 points.", "Un germen virulento (S. aureus, Gram negativo, estreptococo) en una muestra rara vez es contaminante, sobre todo con inflamación. EBJIS: infección probable; ICM: +2 puntos."], "Provável agente, pelo contexto": ["Likely pathogen, given the context", "Probable agente, por el contexto"], "Provável contaminante": ["Likely contaminant", "Probable contaminante"], "Germe de baixa virulência (SCN, C. acnes) em uma única amostra: só valorizar se houver critérios inflamatórios (ICM 2025: começar pelo status inflamatório). Isolado, a EBJIS não confirma infecção.": ["Low-virulence organism (CoNS, C. acnes) in a single sample: count it only if inflammatory criteria are present (ICM 2025: start with the inflammatory status). On its own, EBJIS does not confirm infection.", "Germen de baja virulencia (SCN, C. acnes) en una sola muestra: solo valorar si hay criterios inflamatorios (ICM 2025: empezar por el estado inflamatorio). Aislado, la EBJIS no confirma infección."], "Interpretar com o quadro": ["Interpret with the clinical picture", "Interpretar con el cuadro"], "Uma cultura positiva soma 2 pontos no ICM e torna a infecção provável na EBJIS; defina o tipo de germe na etapa 3.": ["One positive culture adds 2 points in ICM and makes infection likely in EBJIS; set the organism type in step 3.", "Un cultivo positivo suma 2 puntos en el ICM y hace probable la infección en la EBJIS; defina el tipo de germen en la etapa 3."], "Interpretar com cautela": ["Interpret with caution", "Interpretar con cautela"], "Germes diferentes em amostras diferentes: pode ser infecção polimicrobiana ou contaminação. Valorize os que se repetem, os virulentos e os que concordam com a sonicação ou o líquido.": ["Different organisms in different samples: may be polymicrobial infection or contamination. Count those that repeat, virulent ones, and those that match sonication or fluid.", "Gérmenes distintos en muestras distintas: puede ser infección polimicrobiana o contaminación. Valore los que se repiten, los virulentos y los que coinciden con la sonicación o el líquido."], "IPP com cultura negativa": ["Culture-negative PJI", "IPP con cultivo negativo"], "Critérios de infecção presentes com culturas negativas: tratar como IPP com a infectologia.": ["Infection criteria present with negative cultures: treat as PJI with infectious diseases.", "Criterios de infección presentes con cultivos negativos: tratar como IPP con infectología."], "Rever antibiótico prévio, pedir incubação prolongada (14 dias), fungos e micobactérias, e sequenciamento (NGS) da amostra guardada.": ["Review prior antibiotics, request prolonged incubation (14 days), fungi and mycobacteria, and sequencing (NGS) of the stored sample.", "Revisar antibiótico previo, pedir incubación prolongada (14 días), hongos y micobacterias, y secuenciación (NGS) de la muestra guardada."], "Culturas negativas": ["Negative cultures", "Cultivos negativos"], "Sem critérios inflamatórios e com culturas negativas: compatível com falha asséptica.": ["No inflammatory criteria and negative cultures: consistent with aseptic failure.", "Sin criterios inflamatorios y con cultivos negativos: compatible con fallo aséptico."], "Aguardando culturas. A incubação pode levar até 14 dias para germes de baixa virulência.": ["Cultures pending. Incubation may take up to 14 days for low-virulence organisms.", "Cultivos pendientes. La incubación puede tardar hasta 14 días para gérmenes de baja virulencia."], "Sonicação {0} UFC/mL: {1}": ["Sonication {0} CFU/mL: {1}", "Sonicación {0} UFC/mL: {1}"], "positiva (confirma na EBJIS)": ["positive (confirms in EBJIS)", "positiva (confirma en la EBJIS)"], "crescimento baixo (sugestivo)": ["low growth (suggestive)", "crecimiento bajo (sugestivo)"], "sem crescimento": ["no growth", "sin crecimiento"], "NGS positivo: adjuvante; valorizar se coerente com o quadro inflamatório e as culturas.": ["Positive NGS: adjunct; count it if consistent with the inflammatory picture and cultures.", "NGS positivo: complementario; valorar si es coherente con el cuadro inflamatorio y los cultivos."], "NGS negativo não exclui infecção quando os critérios estão presentes.": ["Negative NGS does not exclude infection when criteria are present.", "NGS negativo no excluye infección cuando los criterios están presentes."], "Menos de 3 amostras de tecido: abaixo do recomendado (ICM 2025: 4 a 6 no total, ≥ 3 de tecido). Culturas negativas são menos confiáveis.": ["Fewer than 3 tissue samples: below recommendation (ICM 2025: 4 to 6 in total, ≥ 3 tissue). Negative cultures are less reliable.", "Menos de 3 muestras de tejido: por debajo de lo recomendado (ICM 2025: 4 a 6 en total, ≥ 3 de tejido). Los cultivos negativos son menos fiables."], "Purulência aparente em metalose ou cristais não indica infecção.": ["Apparent purulence in metallosis or crystal disease does not indicate infection.", "La purulencia aparente en metalosis o cristales no indica infección."], "Antibiótico recente pode negativar as culturas.": ["Recent antibiotics may render cultures negative.", "El antibiótico reciente puede negativizar los cultivos."]};</script>
+<script>
+(function(){
+  const $ = id => document.getElementById(id);
+  const num = id => { const v = $(id).value.trim(); if (v === "") return null; const n = Number(v.replace(",", ".")); return isFinite(n) ? n : null; };
+  const val = id => $(id).value;
+  const radio = name => (document.querySelector('input[name="'+name+'"]:checked')||{}).value || "";
+  const chk = id => $(id).checked;
+
+  // ---------- i18n ----------
+  let LANG = "pt";
+  const IDX = {en:0, es:1};
+  const I18N = window.__I18N || {};
+  const L = (s, ...a) => { const r = LANG==="pt" ? s : ((I18N[s]||[])[IDX[LANG]] ?? s); return r.replace(/\{(\d)\}/g, (_,i)=> a[+i]); };
+  const nf = n => n.toLocaleString(LANG==="en" ? "en-US" : LANG==="es" ? "es-ES" : "pt-BR", {useGrouping:true});
+  const fmt = n => LANG==="en" ? String(n) : String(n).replace(".", ",");
+  const ORIG = new Map(), ORIGA = new Map();
+  function translateStatic(){
+    const root = document.querySelector(".wrap");
+    const w = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+    let n;
+    while ((n = w.nextNode())){
+      if (n.parentElement.closest("[data-dyn],script,style")) continue;
+      if (!ORIG.has(n)) ORIG.set(n, n.nodeValue);
+      const o = ORIG.get(n), t = o.trim(); if (!t) continue;
+      n.nodeValue = o.replace(t, L(t));
+    }
+    root.querySelectorAll("[aria-label]").forEach(el=>{ if (!ORIGA.has(el)) ORIGA.set(el, el.getAttribute("aria-label")); el.setAttribute("aria-label", L(ORIGA.get(el))); });
+    document.documentElement.lang = LANG==="pt" ? "pt-BR" : LANG;
+    document.querySelectorAll("#langSeg button").forEach(b=>b.setAttribute("aria-pressed", b.dataset.lang===LANG ? "true" : "false"));
+  }
+
+  const fillList = (id, arr) => { const el=$(id); el.innerHTML=""; arr.forEach(t=>{ const li=document.createElement("li"); li.textContent=t; el.appendChild(li); }); };
+  const setPill = (el, cls, txt) => { el.className = "pill " + cls; el.textContent = txt; };
+  const setSt = (id, cls, txt) => { const el=$(id); el.className = "s " + (cls||""); el.textContent = txt; };
+
+  function evaluate(){
+    const tpo = val("tpo"), dur = val("dur"), hemat = chk("hemat");
+    const sinus = chk("rf_sinus") || chk("rf_exp"), pusDrain = chk("rf_pus"), sepsis = chk("rf_sep");
+    const S = {local:chk("s_local"), fever:chk("s_fever"), wound:chk("s_wound"), bact:chk("s_bact"), rest:chk("s_rest"), never:chk("s_never"), neu:chk("s_new"), stiff:chk("s_stiff")};
+    const amber = Object.values(S).filter(Boolean).length;
+    const risks = ["r_prev","r_surg","r_dm","r_imm","r_obes","r_ra"].filter(chk).length;
+    const early = tpo==="lt4" || tpo==="4to6";
+    let crp = num("crp"); if (crp !== null && val("crp_u") === "mgdL") crp = crp * 10;
+    const esr = num("esr"), dd = num("dd"), fib = val("fib"), rx = val("rx"), hc = val("hc");
+    const wbc = num("wbc"), pmn = num("pmn"), scrp = num("scrp"), calp = num("calp");
+    const le = val("le"), ad = val("ad"), pcult = val("pcult"), germ = val("germ");
+    const altr = chk("c_altr"), crys = chk("c_crys"), infl = chk("c_infl"), hema = chk("c_hema"), frac = chk("c_frac"), atb = chk("c_atb");
+    const impl = val("impl"), soft = val("soft"), dairFail = chk("dairFail"), unfit = chk("unfit");
+    const pus = radio("pus"), ntis = num("ntis"), hist = val("hist"), cult = val("cult"), son = num("son"), ngs = val("ngs");
+    const T = early ? {crp:100, wbc:10000, pmn:90} : {crp:10, wbc:3000, pmn:80};
+
+    // ETAPA 1
+    const acuteScen = tpo==="lt4" ? L("pós-operatória precoce (menos de 4 semanas)") : (hemat && dur==="lt3") ? L("hematogênica aguda (sintomas há menos de 3 semanas)") : (tpo||dur) ? L("crônica ou tardia") : "";
+    const anyClin = sinus || pusDrain || sepsis || amber>0;
+    let c = {cls:"gray", txt:L("Marque os achados"), big:"—", next:[]};
+    if (sepsis){ c = {cls:"red", txt:L("Urgência"), big:L("Sepse: tratar como emergência"), next:[L("Colher hemoculturas e puncionar o joelho sem atrasar o tratamento."),L("Iniciar antibiótico após as coletas e avaliar cirurgia de urgência com a infectologia.")]}; }
+    else if (sinus){ c = {cls:"red", txt:L("IPP confirmada (critério maior)"), big:L("Fístula ou prótese exposta confirmam infecção"), next:[L("PCR, VHS e radiografias para planejar a cirurgia."),L("Punção para identificar o germe antes da cirurgia. Não fazer swab da fístula."),L("Planejar o tratamento cirúrgico com a infectologia.")]}; }
+    else if (pusDrain){ c = {cls:"red", txt:L("Alta suspeita"), big:L("Investigação imediata"), next:[L("PCR, VHS, radiografias e punção do joelho."),L("Não iniciar antibiótico antes da punção se o paciente estiver estável.")]}; }
+    else if (amber>0){ c = {cls:"amber", txt:L("Investigação indicada"), big:L("Pedir PCR, VHS e radiografias"), next:[L("Seguir para a etapa 2. A punção será indicada conforme os exames e a suspeita.")]}; if (S.fever||S.bact) c.next.push(L("Febre ou bacteremia: colher hemoculturas.")); }
+    else if (tpo||dur||risks){ c = {cls:"green", txt:L("Sem sinais de alerta"), big:L("Baixa suspeita clínica"), next:[L("Se a ATJ estiver dolorosa, pedir PCR e VHS mesmo assim: toda ATJ dolorosa deve ter infecção afastada.")]}; }
+    const cl = [];
+    if (amber) cl.push(amber>1 ? L("{0} sintomas suspeitos", amber) : L("1 sintoma suspeito"));
+    if (risks) cl.push(risks>1 ? L("{0} fatores de risco", risks) : L("1 fator de risco"));
+    if (early) cl.push(L("Menos de 6 semanas: usar limiares agudos (PCR > 100 mg/L, leucócitos > 10.000/µL, PMN > 90%)"));
+    setPill($("cPill"), c.cls, c.txt); $("cScen").textContent = acuteScen ? L("Cenário: {0}.", acuteScen) : ""; fillList("cList", cl);
+    $("cNextBig").textContent = c.big; fillList("cNext", c.next);
+    setSt("st1", c.cls==="gray"?"":c.cls, c.cls==="gray"?"—":c.txt);
+
+    // ETAPA 2
+    const ec = $("eCheck"); ec.innerHTML = "";
+    const needHC = sepsis || S.fever || S.bact || tpo==="lt4" || (hemat && dur==="lt3");
+    const chkItems = [[L("PCR"), crp!==null],[L("VHS"), esr!==null],[L("Radiografias"), rx!==""]];
+    if (needHC) chkItems.push([L("Hemoculturas (febre, início agudo ou bacteremia)"), hc!==""]);
+    chkItems.forEach(([t,ok])=>{ const li=document.createElement("li"); const tg=document.createElement("span"); tg.className="tag "+(ok?"done":"must"); tg.textContent=ok?L("feito"):L("falta"); li.append(tg, document.createTextNode(t)); ec.appendChild(li); });
+    const markersHigh = (crp!==null && crp>T.crp) || (!early && esr!==null && esr>30);
+    const ddHigh = dd!==null && dd>860;
+    const specific = S.local || S.fever || S.wound || S.bact || rx==="loose";
+    const acute = tpo==="lt4" || (hemat && dur==="lt3");
+    const highSusp = pusDrain || sepsis || specific || amber>=2 || (acute && anyClin);
+    let p = {cls:"", st:"—", big:L("Preencha PCR e VHS"), list:[]};
+    if (sinus){ p = {cls:"amber", st:L("Punção: recomendada"), big:L("Recomendada para identificar o germe"), list:[L("O diagnóstico já está confirmado pela fístula; a cultura do líquido orienta o antibiótico e o tipo de cirurgia.")]}; }
+    else if (markersHigh || highSusp){ p = {cls:"red", st:L("Punção: obrigatória"), big:L("Punção obrigatória"), list:[]};
+      if (markersHigh) p.list.push(early ? L("PCR acima do limiar agudo (100 mg/L).") : L("PCR acima de 10 mg/L ou VHS acima de 30 mm/h."));
+      if (highSusp) p.list.push(L("Suspeita clínica alta ou quadro agudo (IDSA: puncionar toda suspeita de IPP aguda)."));
+      if (rx==="loose") p.list.push(L("Soltura ou osteólise: afastar infecção antes de planejar revisão asséptica.")); }
+    else if (ddHigh || fib==="high" || amber===1){ p = {cls:"amber", st:L("Punção: considerar"), big:L("Considerar punção"), list:[L("Suspeita intermediária: D-dímero ou fibrinogênio elevado, ou sintoma isolado, com PCR e VHS normais.")]}; }
+    else if (crp!==null && (esr!==null || early)){ p = {cls:"green", st:L("Punção: não indicada agora"), big:L("Punção não indicada no momento"), list:[L("PCR e VHS normais e baixa suspeita: investigar causa mecânica."),L("Repetir PCR e VHS se os sintomas persistirem. Se houver revisão, colher culturas e histologia mesmo assim.")]}; }
+    if (rx==="mech") p.list.push(L("Causa mecânica na radiografia não exclui infecção associada."));
+    if (hc==="pos") p.list.push(L("Hemoculturas positivas: tratar a bacteremia e considerar IPP hematogênica."));
+    $("pIndBig").textContent = p.big; fillList("pInd", p.list);
+    setSt("st2", p.cls, p.st);
+
+    // ETAPA 3
+    const pr = [];
+    const above = b => b ? L("acima") : L("abaixo");
+    if (wbc!==null) pr.push(L("Leucócitos {0}/µL: {1} de {2}", nf(wbc), above(wbc>T.wbc), nf(T.wbc)) + (early ? " " + L("(limiar agudo)") : ""));
+    if (pmn!==null) pr.push(L("PMN {0}%: {1} de {2}%", pmn, above(pmn>T.pmn), T.pmn));
+    if (le){ const leName = {neg:L("negativa"), tr:L("traços"), "1":"+", "2":"++", "3":"+++"}[le]; pr.push(L("Esterase {0}", leName) + ": " + ((le==="2"||le==="3") ? L("positiva (pontua)") : L("não pontua"))); }
+    if (ad) pr.push(ad==="pos" ? L("Alfa-defensina positiva") : L("Alfa-defensina negativa"));
+    if (scrp!==null) pr.push(L("PCR sinovial {0} mg/L: {1} de 6,9", fmt(scrp), above(scrp>6.9)));
+    if (calp!==null) pr.push(calp>=50 ? L("Calprotectina ≥ 50 mg/L (adjuvante)") : L("Calprotectina < 50 mg/L (adjuvante)"));
+    if (pcult) pr.push({neg:L("Cultura: negativa"), pos:L("Cultura: positiva"), pos2:L("Cultura: positiva com o mesmo germe em 2ª amostra (critério maior)")}[pcult]);
+    if (!pr.length) pr.push(L("Preencha os resultados da punção."));
+    fillList("pRead", pr);
+    const pw = [];
+    if (atb) pw.push(L("Antibiótico recente: cultura e celularidade podem vir falsamente negativas. Se negativas e a suspeita persistir, repetir após 2 semanas sem antibiótico."));
+    if (pcult==="pos" && germ==="low") pw.push(L("Uma cultura com germe de baixa virulência pode ser contaminante: confirmar com outra amostra e com o quadro inflamatório."));
+    if (le==="tr"||le==="1") pw.push(L("Esterase em traços ou + não pontua; se o líquido estava hemático, repetir após centrifugar."));
+    fillList("pWarn", pw); $("pWarnCard").hidden = !pw.length;
+    const hasPunct = wbc!==null || pmn!==null || le || ad || scrp!==null || pcult;
+    setSt("st3", hasPunct?"green":"", hasPunct?L("Resultados inseridos"):"—");
+
+    // ETAPA 4
+    const st = (cond, have) => have ? (cond ? "on" : "off") : "na";
+    const major = [];
+    if (sinus) major.push(L("Fístula ou prótese exposta"));
+    if (pcult==="pos2") major.push(L("2 culturas com o mesmo germe"));
+    const items = [
+      {l:L("PCR > {0} mg/L ou D-dímero > 860 ng/mL", T.crp), p:2, s:st((crp!==null&&crp>T.crp)||ddHigh, crp!==null||dd!==null)},
+      {l:L("VHS > 30 mm/h"), p:1, s:st(esr!==null&&esr>30, esr!==null)},
+      {l:L("Leucócitos > {0}/µL ou esterase ++", nf(T.wbc)), p:3, s:st((wbc!==null&&wbc>T.wbc)||le==="2"||le==="3", wbc!==null||le!=="")},
+      {l:L("Alfa-defensina positiva"), p:3, s:st(ad==="pos", ad!=="")},
+      {l:L("PMN > {0}%", T.pmn), p:2, s:st(pmn!==null&&pmn>T.pmn, pmn!==null)},
+      {l:L("PCR sinovial > 6,9 mg/L"), p:1, s:st(scrp!==null&&scrp>6.9, scrp!==null)}];
+    const pre = items.reduce((a,i)=>a+(i.s==="on"?i.p:0),0);
+    const anyLab = [crp,esr,dd,wbc,pmn,scrp].some(v=>v!==null) || le || ad || pcult;
+    let icm = {cls:"gray", txt:L("Preencha os dados"), score:"", key:"none", tick:0};
+    if (major.length) icm = {cls:"red", txt:L("Infectado"), score:L("critério maior"), key:"inf", tick:100};
+    else if (anyLab){
+      if (pre>=6) icm = {cls:"red", txt:L("Infectado"), score:L("pré-op {0} pts", pre), key:"inf"};
+      else if (pre>=2) icm = {cls:"amber", txt:L("Possivelmente infectado"), score:L("pré-op {0} pts", pre), key:"inc"};
+      else icm = {cls:"green", txt:L("Não infectado"), score:L("pré-op {0} pts", pre), key:"neg"};
+      icm.tick = Math.min(pre,8)/8*100;
+    }
+    setPill($("icmPill"), icm.cls, icm.txt); $("icmScore").textContent = icm.score; $("icmTick").style.left = icm.tick+"%";
+    const il = $("icmList"); il.innerHTML = "";
+    const row = (cls, a1, b1) => { const li=document.createElement("li"); li.className=cls; const a=document.createElement("span"); a.textContent=a1; const b=document.createElement("span"); b.textContent=b1; li.append(a,b); il.appendChild(li); };
+    major.forEach(m=>row("on", m, L("maior")));
+    items.forEach(i=>row(i.s, i.l, i.s==="on"?"+"+i.p:i.s==="off"?"0":"—"));
+
+    const noCounts = altr || crys, adInvalid = altr || crys || infl || hema;
+    const sonThr = chk("son_c") ? 200 : 50;
+    function ebjis(withIntra){
+      const conf=[], sug=[], oth=[];
+      if (sinus) conf.push(L("Fístula ou prótese exposta"));
+      if (!noCounts && wbc!==null && wbc>3000) conf.push(L("Leucócitos sinoviais > 3.000/µL"));
+      if (!noCounts && pmn!==null && pmn>80) conf.push(L("PMN sinoviais > 80%"));
+      if (ad==="pos" && !adInvalid) conf.push(L("Alfa-defensina positiva"));
+      if (pcult==="pos2") conf.push(L("Cultura do líquido + mesmo germe em 2ª amostra"));
+      if (S.wound) sug.push(L("Problema prévio de cicatrização"));
+      if (S.fever || S.bact || hc==="pos") sug.push(L("Febre ou bacteremia recente"));
+      if (rx==="loose" && (tpo==="lt4"||tpo==="4to6"||tpo==="6to52")) sug.push(L("Soltura radiográfica precoce"));
+      if (pusDrain && !noCounts) sug.push(L("Purulência"));
+      if (!noCounts && crp!==null && crp>10) sug.push(L("PCR > 10 mg/L"));
+      if (!noCounts && wbc!==null && wbc>1500 && wbc<=3000) oth.push(L("Leucócitos sinoviais > 1.500/µL"));
+      if (!noCounts && pmn!==null && pmn>65 && pmn<=80) oth.push(L("PMN sinoviais > 65%"));
+      if (pcult==="pos") oth.push(L("Cultura do líquido positiva"));
+      const intraAny = withIntra && (cult || hist || son!==null || pus);
+      if (withIntra){
+        if (cult==="two") conf.push(L("≥ 2 culturas intraoperatórias com o mesmo germe"));
+        if (son!==null && son>sonThr) conf.push(L("Sonicação > {0} UFC/mL", sonThr));
+        if (hist==="pos") conf.push(L("Histologia: ≥ 5 neutrófilos em ≥ 5 campos"));
+        if (hist==="org") conf.push(L("Histologia: microrganismos visíveis"));
+        if (pus==="yes" && !noCounts) sug.push(L("Purulência intraoperatória"));
+        if (cult==="one"||cult==="diff") oth.push(L("Cultura intraoperatória isolada positiva"));
+        if (son!==null && son>1 && son<=sonThr) oth.push(L("Sonicação > 1 UFC/mL"));
+        if (hist==="one") oth.push(L("Histologia: ≥ 5 neutrófilos em 1 campo"));
+      }
+      const core = wbc!==null || pmn!==null || ad || pcult || (withIntra && (cult||hist||son!==null));
+      if (conf.length) return {cls:"red", txt:L("Infecção confirmada"), short:L("confirmada"), key:"inf", r:conf};
+      if (sug.length && oth.length) return {cls:"amber", txt:L("Infecção provável"), short:L("provável"), key:"inc", r:sug.concat(oth)};
+      if (!anyLab && !anyClin && !intraAny) return {cls:"gray", txt:L("Preencha os dados"), short:"—", key:"none", r:[]};
+      const r=[];
+      if (sug.length) r.push(L("Achado sugestivo isolado ({0}) sem outro teste positivo", sug.join(", ")));
+      if (oth.length) r.push(L("Teste sugestivo isolado ({0}) sem sinal clínico ou PCR elevada", oth.join(", ")));
+      if (!r.length) r.push(L("Nenhum achado sugestivo ou confirmatório"));
+      if (!core){ r.push(L("Sem punção, cultura ou histologia: dados insuficientes para afastar")); return {cls:"gray", txt:L("Dados incompletos"), short:L("incompleto"), key:"none", r}; }
+      return {cls:"green", txt:L("Infecção improvável"), short:L("improvável"), key:"neg", r};
+    }
+    const eb = ebjis(false);
+    setPill($("ebPill"), eb.cls, eb.txt); fillList("ebList", eb.r);
+
+    const infected = icm.key==="inf" || eb.key==="inf", grey = icm.key==="inc" || eb.key==="inc";
+    let d = {big:"—", list:[], cls:"", st:"—"};
+    if (infected){
+      if (unfit){ d = {cls:"red", st:L("Sem condição cirúrgica"), big:L("Supressão antibiótica ou salvamento"), list:[L("Sem condição para cirurgias múltiplas: discutir supressão antibiótica crônica, DAIR paliativo ou procedimentos de salvamento com a equipe multidisciplinar.")]}; }
+      else {
+        const dairTime = tpo==="lt4" || (hemat && dur==="lt3");
+        const notDair = [];
+        if (!dairTime) notDair.push(tpo||dur ? L("fora da janela (mais de 4 semanas da cirurgia ou sintomas há 3 semanas ou mais)") : L("janela de tempo não informada (etapa 1)"));
+        if (impl==="loose") notDair.push(L("implante solto"));
+        if (sinus) notDair.push(L("fístula"));
+        if (soft==="bad") notDair.push(L("partes moles comprometidas"));
+        if (!notDair.length){
+          d = {cls:"red", st:L("Cirurgia: DAIR"), big:L("DAIR: desbridamento, antibiótico e retenção do implante"), list:[
+            L("Troca obrigatória dos componentes modulares (polietileno), desbridamento amplo e irrigação abundante."),
+            L("Confirmar no intraoperatório que o implante está bem fixo; se estiver solto, converter para revisão."),
+            L("Antibiótico por no mínimo 12 semanas após o DAIR (ICM 2025)."),
+            L("Escores prognósticos ajudam a selecionar: KLIC (pós-operatória precoce) e CRIME80 (hematogênica).")]};
+          if (impl==="") d.list.unshift(L("Fixação do implante ainda indeterminada: avaliar radiografias e confirmar na cirurgia."));
+          if (germ==="dtt") d.list.push(L("Germe difícil de tratar: maior risco de falha do DAIR; considerar revisão."));
+          if (dairFail) d.list.push(L("DAIR prévio falhou: o ICM 2025 indica que repetir o DAIR pode aumentar a taxa de sucesso em casos selecionados; avaliar também a revisão."));
+        } else {
+          const one = (germ==="vir"||germ==="low") && soft!=="bad" && !sepsis;
+          const why2 = [];
+          if (!(germ==="vir"||germ==="low")) why2.push(germ==="dtt"?L("germe difícil de tratar"):germ==="poly"?L("infecção polimicrobiana"):L("germe desconhecido"));
+          if (soft==="bad") why2.push(L("partes moles comprometidas"));
+          if (sepsis) why2.push(L("sepse"));
+          if (one) d = {cls:"red", st:L("Cirurgia: revisão"), big:L("Retirada da ATJ: revisão em 1 tempo é opção"), list:[L("Germe conhecido e sensível, partes moles adequadas e sem sepse."),L("A revisão em 2 tempos continua sendo alternativa; decidir com a infectologia e conforme a experiência do serviço.")]};
+          else d = {cls:"red", st:L("Cirurgia: 2 tempos"), big:L("Retirada da ATJ: revisão em 2 tempos"), list:[L("Motivo: {0}.", why2.join(", ")),L("1º tempo: retirada, desbridamento e espaçador com antibiótico; reimplante após controle da infecção.")]};
+          d.list.unshift(L("DAIR não indicado: {0}.", notDair.join(", ")));
+          if (dairFail) d.list.push(L("Após falha de DAIR, a retirada do implante deve ser considerada."));
+        }
+        if (germ==="") d.list.push(L("Sem germe identificado: se o paciente estiver estável, evitar antibiótico até a coleta intraoperatória."));
+      }
+    } else if (grey){
+      d = {cls:"amber", st:L("Zona cinzenta"), big:L("Zona cinzenta: completar a investigação"), list:[]};
+      if (dd===null) d.list.push(L("Pedir D-dímero (ICM 2025: útil quando há incerteza)."));
+      if (!ad) d.list.push(L("Alfa-defensina ou calprotectina no líquido."));
+      d.list.push(L("Repetir a punção após 2 semanas sem antibiótico."));
+      d.list.push(L("Considerar cintilografia com leucócitos marcados ou biópsia sinovial."));
+      d.list.push(L("Se a revisão for feita por outra causa, usar congelação e culturas intraoperatórias para decidir entre revisão asséptica e em 2 tempos (etapa 5)."));
+    } else if (icm.key==="neg" && eb.key==="neg"){
+      d = {cls:"green", st:L("Infecção improvável"), big:L("Infecção improvável"), list:[L("Investigar causa mecânica (soltura asséptica, instabilidade, desalinhamento, dor referida)."),L("Se houver revisão, colher 4 a 6 amostras e histologia de rotina: culturas positivas inesperadas acontecem.")]};
+    } else if (anyLab || anyClin){
+      d = {cls:"", st:L("Faltam dados"), big:L("Faltam dados para classificar"), list:[L("Complete PCR, VHS e a punção conforme a etapa 2.")]};
+    }
+    $("dBig").textContent = d.big; fillList("dList", d.list);
+    setSt("st4", d.cls, d.st);
+    const dw = [];
+    if (early) dw.push(L("Pós-operatório precoce: escore calculado com limiares agudos; a EBJIS pede cautela com PCR e celularidade nessa fase."));
+    if (altr) dw.push(L("Metalose: celularidade, PCR e alfa-defensina podem ser falsamente positivas; a EBJIS desconsidera esses testes."));
+    if (crys) dw.push(L("Cristais: pesquisar gota ou pseudogota; a EBJIS desconsidera PCR e celularidade."));
+    if (infl) dw.push(L("Artrite inflamatória: o ICM 2025 considera incerto o efeito sobre os biomarcadores; marcadores sinoviais parecem mais confiáveis que os séricos."));
+    if (hema) dw.push(L("Hematoma ou aspirado hemático: alfa-defensina inválida; esterase só após centrifugar."));
+    if (frac) dw.push(L("Fratura periprotética: PCR e celularidade sobem sem infecção."));
+    if (atb) dw.push(L("Antibiótico antes da punção: resultados negativos podem ser falsos."));
+    if (ad==="pos" && adInvalid) dw.push(L("A alfa-defensina positiva não foi usada na EBJIS por causa das condições marcadas."));
+    fillList("dWarn", dw); $("dWarnCard").hidden = !dw.length;
+
+    // ETAPA 5
+    const intra = [
+      {l:L("Histologia positiva"), p:3, s:st(hist==="pos"||hist==="org", hist!=="")},
+      {l:L("Purulência"), p:3, s:st(pus==="yes", pus!=="")},
+      {l:L("Cultura única positiva"), p:2, s:st(cult==="one", cult!=="")}];
+    const hasIntra = intra.some(i=>i.s!=="na") || son!==null;
+    const intraPts = intra.reduce((a,i)=>a+(i.s==="on"?i.p:0),0);
+    const total = pre + intraPts;
+    const fMajor = major.slice(); if (cult==="two") fMajor.push(L("≥ 2 culturas com o mesmo germe"));
+    let f = {cls:"gray", txt:L("ICM —"), score:"", key:"none"};
+    if (fMajor.length) f = {cls:"red", txt:L("ICM: infectado"), score:L("critério maior"), key:"inf"};
+    else if (hasIntra){
+      if (total>=6) f = {cls:"red", txt:L("ICM: infectado"), score:L("total {0} pts", total), key:"inf"};
+      else if (total>=4) f = {cls:"amber", txt:L("ICM: inconclusivo"), score:L("total {0} pts", total), key:"inc"};
+      else f = {cls:"green", txt:L("ICM: não infectado"), score:L("total {0} pts", total), key:"neg"};
+    }
+    const fe = ebjis(true);
+    setPill($("fIcm"), f.cls, f.txt); $("fIcmScore").textContent = f.score;
+    setPill($("fEb"), hasIntra||fMajor.length ? fe.cls : "gray", hasIntra||fMajor.length ? "EBJIS: " + fe.short : "EBJIS —");
+    const fl = [];
+    if (hasIntra){ fl.push(L("Pré-operatório {0} + intraoperatório {1} = {2} pontos", pre, intraPts, total)); intra.forEach(i=>{ if(i.s==="on") fl.push(i.l+" (+"+i.p+")"); }); fe.r.forEach(r=>fl.push("EBJIS: "+r)); }
+    else fl.push(L("Preencha os achados intraoperatórios."));
+    fillList("fList", fl);
+
+    let ib = "—"; const ii = [];
+    if (cult==="two"){ ib = L("Infecção confirmada"); ii.push(L("≥ 2 amostras com o mesmo germe são critério maior. Ajustar o antibiótico pelo antibiograma com a infectologia.")); }
+    else if (cult==="one"){
+      if (germ==="vir"){ ib = L("Valorizar"); ii.push(L("Germe virulento (S. aureus, Gram-negativo, estreptococo) em uma amostra raramente é contaminante, sobretudo com inflamação. EBJIS: infecção provável; ICM: +2 pontos.")); }
+      else if (germ==="low"){ ib = (f.key==="inf"||fe.key==="inf") ? L("Provável agente, pelo contexto") : L("Provável contaminante"); ii.push(L("Germe de baixa virulência (SCN, C. acnes) em uma única amostra: só valorizar se houver critérios inflamatórios (ICM 2025: começar pelo status inflamatório). Isolado, a EBJIS não confirma infecção.")); }
+      else { ib = L("Interpretar com o quadro"); ii.push(L("Uma cultura positiva soma 2 pontos no ICM e torna a infecção provável na EBJIS; defina o tipo de germe na etapa 3.")); }
+    }
+    else if (cult==="diff"){ ib = L("Interpretar com cautela"); ii.push(L("Germes diferentes em amostras diferentes: pode ser infecção polimicrobiana ou contaminação. Valorize os que se repetem, os virulentos e os que concordam com a sonicação ou o líquido.")); }
+    else if (cult==="neg"){
+      if (f.key==="inf" || fe.key==="inf"){ ib = L("IPP com cultura negativa"); ii.push(L("Critérios de infecção presentes com culturas negativas: tratar como IPP com a infectologia."),L("Rever antibiótico prévio, pedir incubação prolongada (14 dias), fungos e micobactérias, e sequenciamento (NGS) da amostra guardada.")); }
+      else { ib = L("Culturas negativas"); ii.push(L("Sem critérios inflamatórios e com culturas negativas: compatível com falha asséptica.")); }
+    }
+    else ii.push(L("Aguardando culturas. A incubação pode levar até 14 dias para germes de baixa virulência."));
+    if (son!==null) ii.push(L("Sonicação {0} UFC/mL: {1}", son, son>sonThr ? L("positiva (confirma na EBJIS)") : son>1 ? L("crescimento baixo (sugestivo)") : L("sem crescimento")));
+    if (ngs==="pos") ii.push(L("NGS positivo: adjuvante; valorizar se coerente com o quadro inflamatório e as culturas."));
+    if (ngs==="neg") ii.push(L("NGS negativo não exclui infecção quando os critérios estão presentes."));
+    $("iBig").textContent = ib; fillList("iList", ii);
+    const fw = [];
+    if (ntis!==null && ntis<3) fw.push(L("Menos de 3 amostras de tecido: abaixo do recomendado (ICM 2025: 4 a 6 no total, ≥ 3 de tecido). Culturas negativas são menos confiáveis."));
+    if (pus==="yes" && (altr||crys)) fw.push(L("Purulência aparente em metalose ou cristais não indica infecção."));
+    if (atb) fw.push(L("Antibiótico recente pode negativar as culturas."));
+    fillList("fWarn", fw); $("fWarnCard").hidden = !fw.length;
+    setSt("st5", f.key!=="none" ? f.cls : "", f.key!=="none" ? f.txt.replace(/^ICM: /,"") : "—");
+  }
+
+  const STEPS = ["suspeita","exames","puncao","decisao","cirurgia"];
+  function show(name, scroll){
+    if (!STEPS.includes(name)) name = "suspeita";
+    STEPS.forEach(s=>{ $("v-"+s).hidden = s!==name; });
+    document.querySelectorAll("nav.steps button").forEach(b=>{ if (b.dataset.go===name) b.setAttribute("aria-current","step"); else b.removeAttribute("aria-current"); });
+    if (scroll) window.scrollTo({top:0, behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth"});
+  }
+  document.addEventListener("click", e=>{
+    const lb = e.target.closest("[data-lang]");
+    if (lb){ setLang(lb.dataset.lang, true); return; }
+    const b = e.target.closest("[data-go]"); if (!b) return;
+    const name = b.dataset.go;
+    if (location.hash !== "#"+name) location.hash = name; else show(name, true);
+  });
+  window.addEventListener("hashchange", ()=>show(location.hash.slice(1), true));
+
+  function setLang(l, save){
+    LANG = ["pt","en","es"].includes(l) ? l : "pt";
+    if (save){ try { localStorage.setItem("pjiLang", LANG); } catch(e){} }
+    translateStatic(); evaluate();
+  }
+
+  const EX = {tpo:"gt52", dur:"ge3", s_rest:true, s_local:true, r_dm:true, crp:"28", esr:"45", dd:"1150", fib:"high", rx:"loose",
+    wbc:"4200", pmn:"86", le:"2", pcult:"neg", impl:"loose", soft:"ok"};
+  function clearAll(){
+    document.querySelectorAll("#f input[type=number]").forEach(i=>i.value="");
+    document.querySelectorAll("#f select").forEach(s=>s.selectedIndex=0);
+    document.querySelectorAll("#f input[type=checkbox]").forEach(c=>c.checked=false);
+    $("pus_nd").checked = true;
+  }
+  function loadExample(){
+    clearAll();
+    Object.entries(EX).forEach(([k,v])=>{ const e=$(k); if(!e) return; if(e.type==="checkbox") e.checked=v; else e.value=v; });
+    evaluate();
+  }
+  $("f").addEventListener("input", evaluate);
+  $("f").addEventListener("change", evaluate);
+  $("f").addEventListener("submit", e=>e.preventDefault());
+  $("btnClear").addEventListener("click", ()=>{ clearAll(); evaluate(); });
+  $("btnExample").addEventListener("click", loadExample);
+  window.__ippEval = evaluate;
+  window.__setLang = setLang;
+
+  let saved = null; try { saved = localStorage.getItem("pjiLang"); } catch(e){}
+  const nav = (navigator.language||"pt").slice(0,2).toLowerCase();
+  loadExample();
+  setLang(saved || (["pt","en","es"].includes(nav) ? nav : "pt"), false);
+  show(location.hash.slice(1), false);
+})();
+</script>
+
+
+</body>
+</html>
